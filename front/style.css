@@ -1,0 +1,208 @@
+/* Базовые стили */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f5f5f5;
+    padding: 20px;
+}
+
+/* Заголовок */
+.header {
+    text-align: center;
+    margin-bottom: 50px;
+}
+
+.header h1 {
+    font-size: 2.5rem;
+    color: #333;
+}
+
+/* Основной контент */
+.main-content {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Секции с файлами */
+.file-sections {
+    display: flex;
+    justify-content: center;
+    gap: 50px;
+    margin-bottom: 50px;
+    flex-wrap: wrap;
+}
+
+/* Левая секция - загрузка файла */
+.file_left {
+    width: 100%;
+    max-width: 400px;
+    min-height: 300px;
+    padding: 30px;
+    border: 2px solid #333; /* Черная граница */
+    border-radius: 12px;
+    background: white;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.upload-area {
+    text-align: center;
+    padding: 40px 20px;
+    border: 2px dashed #ccc;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.upload-area:hover {
+    border-color: #666; /* Темно-серый при наведении */
+    background-color: #f8f8f8;
+}
+
+.select-file-btn {
+    padding: 12px 24px;
+    background: #333; /* Черный фон */
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    margin-top: 15px;
+}
+
+.select-file-btn:hover {
+    background: #666; /* Темно-серый при наведении */
+}
+
+.file-info {
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    border-left: 4px solid #333; /* Черная левая граница */
+}
+
+/* Правая секция - настройки */
+.file_right {
+    width: 100%;
+    max-width: 400px;
+    min-height: 300px;
+    padding: 30px;
+    border: 2px solid #333; /* Черная граница */
+    border-radius: 12px;
+    background: white;
+}
+
+.settings-group {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+.right_select_language,
+.right_select_translate {
+    width: 100%;
+}
+
+label {
+    font-weight: bold;
+    color: #333;
+    display: block;
+    margin-bottom: 8px;
+}
+
+select {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 16px;
+    background: white;
+}
+
+select:focus {
+    outline: none;
+    border-color: #333; /* Черная граница при фокусе */
+    box-shadow: 0 0 0 2px rgba(51, 51, 51, 0.2); /* Черная тень */
+}
+
+/* Блок с кнопками действий */
+.action-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.buttonTranslate,
+.buttonBD,
+.buttonAccount {
+    padding: 15px 30px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 200px;
+}
+
+.buttonTranslate {
+    background: #333; /* Черный фон */
+    color: white;
+}
+
+.buttonTranslate:hover {
+    background: #666; /* Темно-серый при наведении */
+    transform: translateY(-2px);
+}
+
+.buttonBD {
+    background: #333; /* Черный фон */
+    color: white;
+}
+
+.buttonBD:hover {
+    background: #666; /* Темно-серый при наведении */
+    transform: translateY(-2px);
+}
+
+.buttonAccount {
+    background: #333; /* Черный фон */
+    color: white;
+}
+
+.buttonAccount:hover {
+    background: #666; /* Темно-серый при наведении */
+    transform: translateY(-2px);
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .file-sections {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .buttonTranslate,
+    .buttonBD,
+    .buttonAccount {
+        width: 100%;
+        max-width: 300px;
+    }
+}
