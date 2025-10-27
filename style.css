@@ -14,7 +14,7 @@ body {
 /* Заголовок */
 .header {
     text-align: center;
-    margin-bottom: 50px;
+    margin-bottom: 30px;
 }
 
 .header h1 {
@@ -28,7 +28,23 @@ body {
     margin: 0 auto;
 }
 
-/* Секции с файлами */
+/* Блок с кнопками действий (ФИКСИРОВАННЫЙ) */
+.action-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 40px;
+    position: sticky;
+    top: 20px;
+    z-index: 100;
+    background: rgba(245, 245, 245, 0.9);
+    padding: 15px;
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+}
+
+/* Секции с контентом */
 .file-sections {
     display: flex;
     justify-content: center;
@@ -37,20 +53,48 @@ body {
     flex-wrap: wrap;
 }
 
-/* Левая секция - загрузка файла */
-.file_left {
+.page {
+    display: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    width: 100%;
+}
+
+.page.active {
+    display: block;
+    opacity: 1;
+}
+
+/* Общий стиль для всех контентных областей */
+.file_left,
+.file_right,
+.content-area {
     width: 100%;
     max-width: 400px;
     min-height: 300px;
     padding: 30px;
-    border: 2px solid #333; /* Черная граница */
+    border: 2px solid #333;
     border-radius: 12px;
     background: white;
+}
+
+.content-area {
     display: flex;
     flex-direction: column;
     gap: 20px;
 }
 
+.content-area h2 {
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.content-area p {
+    color: #666;
+    line-height: 1.5;
+}
+
+/* Левая секция - загрузка файла */
 .upload-area {
     text-align: center;
     padding: 40px 20px;
@@ -66,13 +110,13 @@ body {
 }
 
 .upload-area:hover {
-    border-color: #666; /* Темно-серый при наведении */
+    border-color: #666;
     background-color: #f8f8f8;
 }
 
 .select-file-btn {
     padding: 12px 24px;
-    background: #333; /* Черный фон */
+    background: #333;
     color: white;
     border: none;
     border-radius: 6px;
@@ -82,25 +126,20 @@ body {
 }
 
 .select-file-btn:hover {
-    background: #666; /* Темно-серый при наведении */
+    background: #666;
 }
 
 .file-info {
     padding: 15px;
     background: #f8f9fa;
     border-radius: 6px;
-    border-left: 4px solid #333; /* Черная левая граница */
+    border-left: 4px solid #333;
 }
 
 /* Правая секция - настройки */
 .file_right {
-    width: 100%;
-    max-width: 400px;
-    min-height: 300px;
-    padding: 30px;
-    border: 2px solid #333; /* Черная граница */
-    border-radius: 12px;
-    background: white;
+    display: flex;
+    flex-direction: column;
 }
 
 .settings-group {
@@ -132,22 +171,12 @@ select {
 
 select:focus {
     outline: none;
-    border-color: #333; /* Черная граница при фокусе */
-    box-shadow: 0 0 0 2px rgba(51, 51, 51, 0.2); /* Черная тень */
+    border-color: #333;
+    box-shadow: 0 0 0 2px rgba(51, 51, 51, 0.2);
 }
 
-/* Блок с кнопками действий */
-.action-buttons {
-    display: flex;
-    justify-content: center;
-    gap: 20px;
-    flex-wrap: wrap;
-}
-
-.buttonTranslator-b,
-.buttonTranslate,
-.buttonBD,
-.buttonAccount {
+/* Кнопки навигации */
+.nav-button {
     padding: 15px 30px;
     border: none;
     border-radius: 8px;
@@ -156,46 +185,73 @@ select:focus {
     cursor: pointer;
     transition: all 0.3s ease;
     min-width: 200px;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
 }
 
-.buttonTranslator-b{
-    background: #333; /* Черный фон */
-    color: white; 
+.buttonTranslator-b {
+    background: #333;
+    color: white;
 }
 
-.buttonTranslator-b:hover {
-    background: #666; /* Темно-серый при наведении */
+.buttonTranslator-b:hover,
+.buttonTranslator-b.active {
+    background: #666;
     transform: translateY(-2px);
 }
 
 .buttonTranslate {
-    background: #333; /* Черный фон */
+    background: #333;
     color: white;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    margin-top: 10px;
 }
 
 .buttonTranslate:hover {
-    background: #666; /* Темно-серый при наведении */
+    background: #666;
     transform: translateY(-2px);
 }
 
 .buttonBD {
-    background: #333; /* Черный фон */
+    background: #333;
     color: white;
 }
 
-.buttonBD:hover {
-    background: #666; /* Темно-серый при наведении */
+.buttonBD:hover,
+.buttonBD.active {
+    background: #666;
     transform: translateY(-2px);
 }
 
 .buttonAccount {
-    background: #333; /* Черный фон */
+    background: #333;
     color: white;
 }
 
-.buttonAccount:hover {
-    background: #666; /* Темно-серый при наведении */
+.buttonAccount:hover,
+.buttonAccount.active {
+    background: #666;
     transform: translateY(-2px);
+}
+
+/* Дополнительные стили для библиотеки и аккаунта */
+.library-content,
+.account-content {
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+}
+
+.account-info {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
 /* Адаптивность */
@@ -208,13 +264,17 @@ select:focus {
     .action-buttons {
         flex-direction: column;
         align-items: center;
+        position: relative;
     }
     
-    .buttonTranslator-b,
-    .buttonTranslate,
-    .buttonBD,
-    .buttonAccount {
+    .nav-button {
         width: 100%;
         max-width: 300px;
+    }
+    
+    .file_left,
+    .file_right,
+    .content-area {
+        max-width: 100%;
     }
 }
