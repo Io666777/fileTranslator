@@ -4,7 +4,7 @@ import (
     "fmt"
     "net/http"
     "html/template"
-    "fileTranslator/logick"
+ 
 )
 
 func page(w http.ResponseWriter, r *http.Request) {
@@ -27,8 +27,6 @@ func handleRequest() {
     fmt.Println("Сервер запущен на http://localhost:5500")
     http.ListenAndServe(":5500", nil)
 }
-
-
 
 func main() {
     handleRequest()
