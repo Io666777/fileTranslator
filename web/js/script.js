@@ -1,6 +1,5 @@
 // Конфигурация
 const COMPONENTS_PATH = './components/';
-const API_BASE = 'http://localhost:5500';
 
 // ========== СИСТЕМА КОМПОНЕНТОВ И НАВИГАЦИИ ==========
 
@@ -17,20 +16,30 @@ async function loadComponent(componentName, targetElementId) {
 
 // Загрузка страницы
 async function loadPage(pageName) {
+    console.log('🎯 Загружаю страницу:', pageName);
+    
     try {
         const response = await fetch(`${COMPONENTS_PATH}${pageName}.html`);
         const html = await response.text();
         document.getElementById('page-content').innerHTML = html;
+        console.log('✅ Страница загружена:', pageName);
         
-        // Инициализация страницы
-        initializePage(pageName);
+        // Ждем обновления DOM перед показом секции
+        setTimeout(() => {
+            showSection('#' + pageName);
+            // Инициализация страницы
+            initializePage(pageName);
+        }, 10);
+        
     } catch (error) {
-        console.error(`Ошибка загрузки страницы ${pageName}:`, error);
+        console.error(`❌ Ошибка загрузки страницы ${pageName}:`, error);
     }
 }
 
-// Показать секцию (твоя существующая функция)
+// Показать секцию
 function showSection(id) {
+    console.log('🔄 Пытаюсь показать секцию:', id);
+    
     // Скрываем все секции
     document.querySelectorAll('.page').forEach(section => {
         section.classList.remove('active');
@@ -45,12 +54,18 @@ function showSection(id) {
     const target = document.querySelector(id);
     if (target) {
         target.classList.add('active');
+        console.log('✅ Секция найдена и активирована:', id);
+    } else {
+        console.error('❌ Секция не найдена:', id);
     }
 
     // Активируем соответствующую кнопку
     const activeButton = document.querySelector(`[href="${id}"]`);
     if (activeButton) {
         activeButton.classList.add('active');
+        console.log('✅ Кнопка активирована:', id);
+    } else {
+        console.error('❌ Кнопка не найдена:', id);
     }
 }
 
@@ -61,19 +76,23 @@ function setupNavigation() {
         if (e.target.matches('.nav-button')) {
             e.preventDefault();
             const href = e.target.getAttribute('href');
-            showSection(href);
+            const pageName = href.substring(1);
+            
+            loadPage(pageName);
             history.pushState(null, null, href);
         }
     });
 
     // При изменении хеша в URL
     window.addEventListener('hashchange', () => {
-        showSection(location.hash);
+        const pageName = location.hash.substring(1) || 'translator';
+        loadPage(pageName);
     });
 
     // Для поддержки кнопок "Назад/Вперед" браузера
     window.addEventListener('popstate', () => {
-        showSection(location.hash);
+        const pageName = location.hash.substring(1) || 'translator';
+        loadPage(pageName);
     });
 }
 
@@ -194,17 +213,10 @@ function initializeTranslator() {
     // Обработчик кнопки очистки
     if (removeFileBtn) {
         removeFileBtn.addEventListener('click', () => {
-            // Сброс выбранного файла
             if (fileInput) fileInput.value = '';
-
-            // Очистка текста
             if (fileName) fileName.textContent = '';
             if (fileSize) fileSize.textContent = '';
-
-            // Скрываем блок fileInfo
             if (fileInfo) fileInfo.hidden = true;
-
-            // Показываем блок загрузки
             if (uploadArea) uploadArea.hidden = false;
         });
     }
@@ -218,23 +230,14 @@ function initializeTranslator() {
 
 // ========== СЕКЦИЯ АККАУНТА ==========
 
-// Инициализация аккаунта
+// Инициализация аккаунта (теперь используем AuthManager из auth.js)
 function initializeAccount() {
-    // Загружаем текущего пользователя
-    loadCurrentUser();
-    
-    // Форма обновления
-    const updateForm = document.getElementById('updateUserForm');
-    if (updateForm) {
-        updateForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            const updateData = {
-                name: document.getElementById('updateName').value,
-                email: document.getElementById('updateEmail').value,
-                password: document.getElementById('updatePassword').value
-            };
-            updateUserInfo(updateData);
-        });
+    if (window.AuthManager && window.AuthManager.initializeAccount) {
+        window.AuthManager.initializeAccount();
+    } else {
+        console.error('❌ AuthManager не загружен');
+        // Fallback: показываем простой текст
+        document.getElementById('page-content').innerHTML = '<p>Модуль аутентификации не загружен</p>';
     }
 }
 
@@ -245,72 +248,17 @@ function initializeLibrary() {
     loadUserFiles();
 }
 
-// ========== API ФУНКЦИИ ==========
-
-// Работа с пользователями
-class UserAPI {
-    static async createUser(userData) {
-        const response = await fetch(`${API_BASE}/user`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(userData)
-        });
-        return await response.json();
-    }
-
-    static async getUser(id) {
-        const response = await fetch(`${API_BASE}/user/${id}`);
-        return await response.json();
-    }
-
-    static async updateUser(id, userData) {
-        const response = await fetch(`${API_BASE}/user/${id}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(userData)
-        });
-        return await response.json();
-    }
-}
-
-// Работа с файлами
-class FileAPI {
-    static async createFile(fileData) {
-        const response = await fetch(`${API_BASE}/file`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(fileData)
-        });
-        return await response.json();
-    }
-
-    static async getUserFiles(userId) {
-        const response = await fetch(`${API_BASE}/files/${userId}`);
-        return await response.json();
-    }
-
-    static async getFile(id) {
-        const response = await fetch(`${API_BASE}/file/${id}`);
-        return await response.json();
-    }
-}
-
-// ========== БИЗНЕС-ЛОГИКА ==========
+// ========== ФУНКЦИИ ДЛЯ ФАЙЛОВ ==========
 
 // Обработка перевода файла
 async function handleTranslation() {
-    const userId = localStorage.getItem('userId');
-    if (!userId) {
-        alert('Пользователь не найден. Обновите страницу.');
+    // Используем AuthManager для проверки авторизации
+    if (!window.AuthManager || !window.AuthManager.isUserLoggedIn()) {
+        alert('❌ Войдите в аккаунт для перевода файлов');
         return;
     }
 
+    const userId = window.AuthManager.getCurrentUserId();
     const fileName = document.getElementById('fileName')?.textContent;
     
     if (!fileName || !fileName.trim()) {
@@ -321,7 +269,6 @@ async function handleTranslation() {
     // Получаем выбранные настройки
     const langFrom = document.querySelector('.right_select_language select')?.value || 'auto';
     const langTo = document.querySelector('.right_select_translate select')?.value || 'en';
-    const format = document.querySelectorAll('.right_select_translate select')[1]?.value || 'same';
 
     // Создаем запись о файле
     const fileData = {
@@ -333,6 +280,7 @@ async function handleTranslation() {
     };
 
     try {
+        // TODO: Перенести FileAPI в отдельный модуль
         const newFile = await FileAPI.createFile(fileData);
         alert(`Файл "${fileName}" отправлен на перевод! ID: ${newFile.id}`);
         
@@ -346,10 +294,14 @@ async function handleTranslation() {
 
 // Загрузка файлов пользователя для библиотеки
 async function loadUserFiles() {
-    const userId = localStorage.getItem('userId');
-    if (!userId) return;
+    if (!window.AuthManager || !window.AuthManager.isUserLoggedIn()) {
+        return;
+    }
 
+    const userId = window.AuthManager.getCurrentUserId();
+    
     try {
+        // TODO: Перенести FileAPI в отдельный модуль
         const files = await FileAPI.getUserFiles(userId);
         displayFilesInLibrary(files);
     } catch (error) {
@@ -376,109 +328,10 @@ function displayFilesInLibrary(files) {
     }
 }
 
-// Функции для работы с пользователями
-async function loadCurrentUser() {
-    const userId = localStorage.getItem('userId');
-    if (!userId) {
-        showTestResult('Пользователь не найден. Создайте нового.');
-        return;
-    }
-
-    try {
-        const user = await UserAPI.getUser(userId);
-        displayUserInfo(user);
-        showTestResult(`Пользователь загружен: ${user.name} (${user.email})`);
-    } catch (error) {
-        showTestResult('Ошибка загрузки пользователя: ' + error.message);
-    }
-}
-
-// Создание тестового пользователя
-async function createTestUser() {
-    const testUserData = {
-        name: `Тестовый пользователь ${Date.now()}`,
-        email: `test${Date.now()}@example.com`,
-        password: 'test123'
-    };
-
-    try {
-        const newUser = await UserAPI.createUser(testUserData);
-        showTestResult(`Создан пользователь: ${newUser.name} (ID: ${newUser.id})`);
-        
-        // Сохраняем как текущего
-        localStorage.setItem('userId', newUser.id);
-        localStorage.setItem('userName', newUser.name);
-        displayUserInfo(newUser);
-    } catch (error) {
-        showTestResult('Ошибка создания пользователя: ' + error.message);
-    }
-}
-
-// Обновление информации о пользователе
-async function updateUserInfo(userData) {
-    const userId = localStorage.getItem('userId');
-    if (!userId) {
-        alert('Пользователь не найден');
-        return;
-    }
-
-    try {
-        const updatedUser = await UserAPI.updateUser(userId, userData);
-        displayUserInfo(updatedUser);
-        showTestResult('Данные пользователя обновлены!');
-    } catch (error) {
-        showTestResult('Ошибка обновления: ' + error.message);
-    }
-}
-
-// Отображение информации о пользователе
-function displayUserInfo(user) {
-    const userInfoDiv = document.getElementById('userInfo');
-    if (userInfoDiv && user) {
-        userInfoDiv.innerHTML = `
-            <p><strong>ID:</strong> ${user.id}</p>
-            <p><strong>Имя:</strong> ${user.name}</p>
-            <p><strong>Email:</strong> ${user.email}</p>
-            <p><strong>Пароль:</strong> ${user.password}</p>
-            <p><strong>Статус:</strong> Активен</p>
-        `;
-    }
-}
-
-// Показать результаты тестов
-function showTestResult(message) {
-    const resultsDiv = document.getElementById('testResults');
-    if (resultsDiv) {
-        resultsDiv.innerHTML = `<p>${message}</p>`;
-    }
-}
-
-// Инициализация пользователя при загрузке
-async function initializeUser() {
-    let userId = localStorage.getItem('userId');
-    
-    if (!userId) {
-        // Создаем нового пользователя при первом посещении
-        const userData = {
-            name: 'Новый пользователь',
-            email: `user_${Date.now()}@example.com`,
-            password: 'temp_password'
-        };
-        
-        try {
-            const newUser = await UserAPI.createUser(userData);
-            localStorage.setItem('userId', newUser.id);
-            localStorage.setItem('userName', newUser.name);
-        } catch (error) {
-            console.error('Ошибка создания пользователя:', error);
-        }
-    }
-}
-
 // ========== ЗАПУСК ПРИЛОЖЕНИЯ ==========
 
 // Запуск приложения
 document.addEventListener('DOMContentLoaded', function() {
     initializeApp();
-    initializeUser(); // Инициализация пользователя
+    // Инициализация пользователя теперь в auth.js
 });

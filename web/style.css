@@ -1,19 +1,9 @@
-/* Базовые стили */
+/* ========== БАЗОВЫЕ СТИЛИ ========== */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
-
-#fileName {
-    display: inline-block;
-    max-width: 100%;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    vertical-align: bottom;
-}
-
 
 body {
     font-family: Arial, sans-serif;
@@ -21,40 +11,12 @@ body {
     padding: 20px;
 }
 
-/* Заголовок */
-.header {
-    text-align: center;
-    margin-bottom: 30px;
-}
-
-.header h1 {
-    font-size: 2.5rem;
-    color: #333;
-}
-
-/* Основной контент */
+/* ========== ЛЕЙАУТ И КОНТЕЙНЕРЫ ========== */
 .main-content {
     max-width: 1200px;
     margin: 0 auto;
 }
 
-/* Блок с кнопками действий (ФИКСИРОВАННЫЙ) */
-.action-buttons {
-    display: flex;
-    justify-content: center;
-    gap: 20px;
-    flex-wrap: wrap;
-    margin-bottom: 40px;
-    position: sticky;
-    top: 20px;
-    z-index: 100;
-    background: rgba(245, 245, 245, 0.9);
-    padding: 15px;
-    border-radius: 12px;
-    backdrop-filter: blur(10px);
-}
-
-/* Секции с контентом */
 .file-sections {
     display: flex;
     justify-content: center;
@@ -75,7 +37,56 @@ body {
     opacity: 1;
 }
 
-/* Общий стиль для всех контентных областей */
+/* ========== ЗАГОЛОВОК ========== */
+.header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.header h1 {
+    font-size: 2.5rem;
+    color: #333;
+}
+
+/* ========== НАВИГАЦИЯ ========== */
+.action-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 40px;
+    position: sticky;
+    top: 20px;
+    z-index: 100;
+    background: rgba(245, 245, 245, 0.9);
+    padding: 15px;
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+}
+
+.nav-button {
+    padding: 15px 30px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 200px;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+    background: #333;
+    color: white;
+}
+
+.nav-button:hover,
+.nav-button.active {
+    background: #666;
+    transform: translateY(-2px);
+}
+
+/* ========== ОБЩИЕ КОМПОНЕНТЫ ========== */
 .file_left,
 .file_right,
 .content-area {
@@ -104,7 +115,7 @@ body {
     line-height: 1.5;
 }
 
-/* Левая секция - загрузка файла */
+/* ========== СЕКЦИЯ ПЕРЕВОДЧИКА ========== */
 .upload-area {
     text-align: center;
     padding: 40px 20px;
@@ -124,7 +135,9 @@ body {
     background-color: #f8f8f8;
 }
 
-.select-file-btn {
+.select-file-btn,
+.buttonCleane,
+.buttonTranslate {
     padding: 12px 24px;
     background: #333;
     color: white;
@@ -132,11 +145,15 @@ body {
     border-radius: 6px;
     cursor: pointer;
     font-size: 16px;
-    margin-top: 15px;
+    margin-top: 10px;
+    transition: all 0.3s ease;
 }
 
-.select-file-btn:hover {
+.select-file-btn:hover,
+.buttonCleane:hover,
+.buttonTranslate:hover {
     background: #666;
+    transform: translateY(-2px);
 }
 
 .file-info {
@@ -144,10 +161,18 @@ body {
     margin-top: 30px;
     background: #f8f9fa;
     border-radius: 6px;
-    
 }
 
-/* Правая секция - настройки */
+#fileName {
+    display: inline-block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    vertical-align: bottom;
+}
+
+/* Настройки переводчика */
 .file_right {
     display: flex;
     flex-direction: column;
@@ -178,6 +203,7 @@ select {
     border-radius: 6px;
     font-size: 16px;
     background: white;
+    transition: all 0.3s ease;
 }
 
 select:focus {
@@ -186,102 +212,215 @@ select:focus {
     box-shadow: 0 0 0 2px rgba(51, 51, 51, 0.2);
 }
 
-/* Кнопки навигации */
-.nav-button {
-    padding: 15px 30px;
-    border: none;
-    border-radius: 8px;
-    font-size: 16px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    min-width: 200px;
-    text-decoration: none;
-    display: inline-block;
-    text-align: center;
-}
-
-.buttonTranslator-b {
-    background: #333;
-    color: white;
-}
-
-.buttonTranslator-b:hover,
-.buttonTranslator-b.active {
-    background: #666;
-    transform: translateY(-2px);
-}
-
-.buttonCleane,
-.buttonTranslate {
-    background: #333;
-    color: white;
-    padding: 12px 24px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 16px;
-    margin-top: 10px;
-}
-
-.buttonCleane:hover{
-      background: #666;
-    transform: translateY(-2px);  
-}
-
-.buttonTranslate:hover {
-    background: #666;
-    transform: translateY(-2px);
-}
-
-.buttonBD {
-    background: #333;
-    color: white;
-}
-
-.buttonBD:hover,
-.buttonBD.active {
-    background: #666;
-    transform: translateY(-2px);
-}
-
-.buttonAccount {
-    background: #333;
-    color: white;
-}
-
-.buttonAccount:hover,
-.buttonAccount.active {
-    background: #666;
-    transform: translateY(-2px);
-}
-
-/* Дополнительные стили для библиотеки и аккаунта */
-.library-content,
-.account-content {
+/* ========== СЕКЦИЯ БИБЛИОТЕКИ ========== */
+.library-content {
     padding: 20px;
     background: #f8f9fa;
     border-radius: 8px;
     border: 1px solid #ddd;
 }
 
+/* ========== СЕКЦИЯ АККАУНТА ========== */
 .account-info {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+    background: white;
+    padding: 25px;
+    border: 2px solid #333;
+    border-radius: 12px;
+    margin-bottom: 25px;
+    transition: all 0.3s ease;
 }
 
-/* Адаптивность */
+.account-info:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.account-info h3 {
+    color: #333;
+    margin-bottom: 20px;
+    font-size: 1.4rem;
+    border-bottom: 2px solid #f0f0f0;
+    padding-bottom: 10px;
+}
+
+#userInfo {
+    line-height: 1.6;
+}
+
+#userInfo p {
+    margin: 12px 0;
+    padding: 8px 0;
+    border-bottom: 1px solid #f5f5f5;
+    color: #333;
+}
+
+#userInfo p:last-child {
+    border-bottom: none;
+}
+
+#userInfo strong {
+    color: #333;
+    display: inline-block;
+    min-width: 120px;
+}
+
+/* Форма обновления данных */
+.update-form {
+    background: white;
+    padding: 25px;
+    border: 2px solid #333;
+    border-radius: 12px;
+    margin-bottom: 25px;
+    transition: all 0.3s ease;
+}
+
+.update-form:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.update-form h3 {
+    color: #333;
+    margin-bottom: 20px;
+    font-size: 1.4rem;
+    border-bottom: 2px solid #f0f0f0;
+    padding-bottom: 10px;
+}
+
+.update-form input {
+    width: 100%;
+    padding: 14px;
+    margin: 12px 0;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 16px;
+    background: white;
+    transition: all 0.3s ease;
+}
+
+.update-form input:focus {
+    outline: none;
+    border-color: #333;
+    box-shadow: 0 0 0 2px rgba(51, 51, 51, 0.2);
+}
+
+.update-form button {
+    width: 100%;
+    padding: 15px;
+    background: #333;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 10px;
+}
+
+.update-form button:hover {
+    background: #666;
+    transform: translateY(-2px);
+}
+
+/* Панель тестовых функций */
+.admin-panel {
+    background: white;
+    padding: 25px;
+    border: 2px solid #333;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.admin-panel:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.admin-panel h3 {
+    color: #333;
+    margin-bottom: 20px;
+    font-size: 1.4rem;
+    border-bottom: 2px solid #f0f0f0;
+    padding-bottom: 10px;
+}
+
+.admin-panel button {
+    width: 100%;
+    padding: 14px 20px;
+    background: #333;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin: 8px 0;
+    text-align: left;
+}
+
+.admin-panel button:hover {
+    background: #666;
+    transform: translateY(-2px);
+}
+
+/* Блок результатов тестов */
+#testResults {
+    background: #f8f9fa;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 20px;
+    margin-top: 20px;
+    min-height: 80px;
+}
+
+#testResults p {
+    color: #333;
+    line-height: 1.5;
+    margin: 0;
+}
+
+/* Состояния для пользовательской информации */
+.loading-state {
+    color: #666;
+    font-style: italic;
+    text-align: center;
+    padding: 20px;
+}
+
+.error-state {
+    color: #d32f2f;
+    background: #ffebee;
+    padding: 15px;
+    border-radius: 6px;
+    border-left: 4px solid #d32f2f;
+}
+
+.success-state {
+    color: #2e7d32;
+    background: #e8f5e8;
+    padding: 15px;
+    border-radius: 6px;
+    border-left: 4px solid #2e7d32;
+}
+
+.user-data {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 6px;
+    border: 1px solid #e9ecef;
+}
+
+/* ========== АДАПТИВНОСТЬ ========== */
 @media (max-width: 768px) {
     .file-sections {
         flex-direction: column;
         align-items: center;
+        gap: 30px;
     }
     
     .action-buttons {
         flex-direction: column;
         align-items: center;
         position: relative;
+        gap: 10px;
     }
     
     .nav-button {
@@ -293,8 +432,35 @@ select:focus {
     .file_right,
     .content-area {
         max-width: 100%;
+        padding: 20px;
+    }
+    
+    .account-info,
+    .update-form,
+    .admin-panel {
+        padding: 20px;
+    }
+    
+    .admin-panel button {
+        font-size: 14px;
+        padding: 12px 16px;
+    }
+    
+    .update-form input {
+        padding: 12px;
+    }
+    
+    #userInfo p {
+        font-size: 14px;
+    }
+    
+    #userInfo strong {
+        min-width: 100px;
+        display: block;
+        margin-bottom: 5px;
+    }
+    
+    .header h1 {
+        font-size: 2rem;
     }
 }
-
-
-

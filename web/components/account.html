@@ -1,0 +1,71 @@
+<section id="account" class="page">
+    <section class="file-sections">
+        <!-- ЭКРАН ПРИВЕТСТВИЯ (промежуточный) -->
+        <div class="content-area" id="welcomeScreen">
+            <h2>Добро пожаловать!</h2>
+            <p>Войдите в свой аккаунт или создайте новый</p>
+            <div class="auth-buttons">
+                <button class="auth-btn" id="loginBtn">Войти</button>
+                <button class="auth-btn" id="registerBtn">Зарегистрироваться</button>
+            </div>
+        </div>
+
+        <!-- ЭКРАН РЕГИСТРАЦИИ -->
+        <div class="content-area" id="registerScreen" style="display: none;">
+            <h2>Регистрация</h2>
+            <form id="registerForm">
+                <div class="form-group">
+                    <label for="regName">Имя:</label>
+                    <input type="text" id="regName" placeholder="Введите ваше имя" required>
+                </div>
+                <div class="form-group">
+                    <label for="regEmail">Email:</label>
+                    <input type="email" id="regEmail" placeholder="Введите ваш email" required>
+                </div>
+                <div class="form-group">
+                    <label for="regPassword">Пароль:</label>
+                    <input type="password" id="regPassword" placeholder="Придумайте пароль" required>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="primary-btn">Зарегистрироваться</button>
+                    <button type="button" class="secondary-btn" id="backFromRegister">Назад</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- ЭКРАН ВХОДА -->
+        <div class="content-area" id="loginScreen" style="display: none;">
+            <h2>Вход в аккаунт</h2>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="loginEmail">Email:</label>
+                    <input type="email" id="loginEmail" placeholder="Введите ваш email" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Пароль:</label>
+                    <input type="password" id="loginPassword" placeholder="Введите ваш пароль" required>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="primary-btn">Войти</button>
+                    <button type="button" class="secondary-btn" id="backFromLogin">Назад</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- ЛИЧНЫЙ КАБИНЕТ (после входа) -->
+        <div class="content-area" id="accountScreen" style="display: none;">
+            <h2 id="greetingText">Привет, </h2>
+            <div class="account-actions">
+                <button class="logout-btn" id="logoutBtn">Выйти из аккаунта</button>
+            </div>
+            
+            <!-- Дополнительная информация -->
+            <div class="account-details">
+                <h3>Информация об аккаунте</h3>
+                <div id="accountDetails">
+                    <p>Загрузка информации...</p>
+                </div>
+            </div>
+        </div>
+    </section>
+</section>
