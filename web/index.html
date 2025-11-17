@@ -7,108 +7,20 @@
     <title>File Translator</title>
 </head>
 <body>
-    
-    <!-- Заголовок -->
-    <header class="header">
-        <h1>Переводчик файлов</h1>
-    </header>
+    <!-- Шапка -->
+    <div id="header"></div>
+
+    <!-- Навигация -->
+    <div id="navigation"></div>
 
     <!-- Основной контент -->
     <main class="main-content">
-        <!-- Блок с кнопками действий (ПЕРЕМЕЩЕН ВВЕРХ) -->
-        <section class="action-buttons">
-            <a href="#translator" class="nav-button buttonTranslator-b">Переводчик</a>
-            <a href="#library" class="nav-button buttonBD">Библиотека</a>
-            <a href="#account" class="nav-button buttonAccount">Аккаунт</a>
-        </section>
-
-        <!-- Секция Переводчик -->
-        <section id="translator" class="page active">
-            <section class="file-sections">
-                <!-- Левая секция - загрузка файла -->
-                <div class="file_left">
-                    <div class="upload-area" id="uploadArea">
-                        <p>Перетащите файл сюда</p>
-                        <p>или</p>
-                        <button class="select-file-btn">Выберите файл</button>
-                        <input type="file" id="fileInput" hidden>
-                    </div>
-                    <div class="file-info" id="fileInfo" hidden>
-                        <p>Файл: <span id="fileName"></span></p>
-                        <p>Размер: <span id="fileSize"></span></p>
-                        <button id="removeFileBtn" class="buttonCleane">Очистить облость</button>
-                    </div>
-                </div>
-
-                <!-- Правая секция - настройки перевода -->
-                <div class="file_right">
-                    <div class="settings-group">
-                        <div class="right_select_language">
-                            <label>Исходный язык:
-                                <select>
-                                    <option value="auto">Автоопределение</option>
-                                    <option value="ru">Русский</option>
-                                    <option value="en">Английский</option>
-                                </select>
-                            </label>
-                        </div>
-
-                        <div class="right_select_translate">
-                            <label>Целевой язык:
-                                <select>
-                                    <option value="en">Английский</option>
-                                    <option value="ru">Русский</option>
-                                    <option value="es">Испанский</option>
-                                </select>
-                            </label>
-                        </div>
-
-                        <div class="right_select_translate">
-                            <label>Формат:
-                                <select>
-                                    <option value="same">Исходный формат</option>
-                                    <option value="pdf">PDF</option>
-                                    <option value="docx">DOCX</option>
-                                    <option value="txt">TXT</option>
-                                </select>
-                            </label>
-                        </div>
-                        <button class="buttonTranslate">Начать перевод</button>
-                    </div>
-                </div>
-            </section>
-        </section>
-
-        <!-- Секция Библиотека -->
-        <section id="library" class="page">
-            <section class="file-sections">
-                <div class="content-area">
-                    <h2>Библиотека переводов</h2>
-                    <p>Здесь будут отображаться ваши предыдущие переводы</p>
-                    <div class="library-content">
-                        <p>Список переведенных файлов появится здесь</p>
-                    </div>
-                </div>
-            </section>
-        </section>
-
-        <!-- Секция Аккаунт -->
-        <section id="account" class="page">
-            <section class="file-sections">
-                <div class="content-area">
-                    <h2>Личный кабинет</h2>
-                    <p>Настройки аккаунта и статистика</p>
-                    <div class="account-content">
-                        <div class="account-info">
-                            <p>Имя пользователя: Пользователь</p>
-                            <p>Статистика переводов: 0 файлов</p>
-                        </div>
-                    </div>
-                </div>
-            </section>
-        </section>
+        <!-- Страницы будут загружаться сюда -->
+        <div id="page-content">
+            <div class="loading">Загрузка...</div>
+        </div>
     </main>
 
-<script src="script.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>

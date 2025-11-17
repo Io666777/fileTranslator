@@ -1,0 +1,55 @@
+<section id="translator" class="page active">
+    <section class="file-sections">
+        <!-- Левая секция - загрузка файла -->
+        <div class="file_left">
+            <div class="upload-area" id="uploadArea">
+                <p>Перетащите файл сюда</p>
+                <p>или</p>
+                <button class="select-file-btn">Выберите файл</button>
+                <input type="file" id="fileInput" hidden>
+            </div>
+            <div class="file-info" id="fileInfo" hidden>
+                <p>Файл: <span id="fileName"></span></p>
+                <p>Размер: <span id="fileSize"></span></p>
+                <button id="removeFileBtn" class="buttonCleane">Очистить облость</button>
+            </div>
+        </div>
+
+        <!-- Правая секция - настройки перевода -->
+        <div class="file_right">
+            <div class="settings-group">
+                <div class="right_select_language">
+                    <label>Исходный язык:
+                        <select>
+                            <option value="auto">Автоопределение</option>
+                            <option value="ru">Русский</option>
+                            <option value="en">Английский</option>
+                        </select>
+                    </label>
+                </div>
+
+                <div class="right_select_translate">
+                    <label>Целевой язык:
+                        <select>
+                            <option value="en">Английский</option>
+                            <option value="ru">Русский</option>
+                            <option value="es">Испанский</option>
+                        </select>
+                    </label>
+                </div>
+
+                <div class="right_select_translate">
+                    <label>Формат:
+                        <select>
+                            <option value="same">Исходный формат</option>
+                            <option value="pdf">PDF</option>
+                            <option value="docx">DOCX</option>
+                            <option value="txt">TXT</option>
+                        </select>
+                    </label>
+                </div>
+                <button class="buttonTranslate">Начать перевод</button>
+            </div>
+        </div>
+    </section>
+</section>
