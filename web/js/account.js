@@ -112,7 +112,6 @@ async function handleRegister(e) {
     
     const userData = {
         name: document.getElementById('regName').value,
-        email: document.getElementById('regEmail').value,
         password: document.getElementById('regPassword').value
     };
     
@@ -140,17 +139,16 @@ async function handleRegister(e) {
 async function handleLogin(e) {
     e.preventDefault();
     
-    const email = document.getElementById('loginEmail').value;
+    const name = document.getElementById('loginName').value;
     const password = document.getElementById('loginPassword').value;
     
     try {
         console.log('🔄 Вход в аккаунт...');
         
-        // В реальном приложении здесь был бы endpoint /login
+        // TODO: Реализовать нормальную аутентификацию по имени
         // Пока используем заглушку - создаем нового пользователя
         const userData = {
-            name: 'Пользователь',
-            email: email,
+            name: name,
             password: password
         };
         
@@ -158,10 +156,10 @@ async function handleLogin(e) {
         
         // Сохраняем данные пользователя
         localStorage.setItem('userId', user.id);
-        localStorage.setItem('userName', user.name || 'Пользователь');
+        localStorage.setItem('userName', user.name);
         
         // Показываем личный кабинет
-        showAccountScreen(user.name || 'Пользователь');
+        showAccountScreen(user.name);
         loadUserDetails(user.id);
         
         console.log('✅ Вход выполнен');
@@ -200,7 +198,7 @@ function displayAccountDetails(user) {
     if (user) {
         accountDetails.innerHTML = `
             <p><strong>ID:</strong> ${user.id}</p>
-            <p><strong>Email:</strong> ${user.email}</p>
+            <p><strong>Имя пользователя:</strong> ${user.name}</p>
             <p><strong>Дата регистрации:</strong> ${new Date().toLocaleDateString()}</p>
             <p><strong>Статус:</strong> <span style="color: #28a745;">Активен</span></p>
         `;
@@ -239,7 +237,6 @@ function getCurrentUserName() {
 }
 
 // ========== ЭКСПОРТ ФУНКЦИЙ ДЛЯ ИСПОЛЬЗОВАНИЯ В ДРУГИХ ФАЙЛАХ ==========
-// В браузерном JS нет module.exports, поэтому добавляем в window
 window.AuthManager = {
     initializeAccount,
     isUserLoggedIn,
