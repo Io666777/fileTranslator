@@ -1,0 +1,2 @@
+bind_addr = ":5500"
+log_level = "debug"
