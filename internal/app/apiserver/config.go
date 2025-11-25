@@ -1,17 +1,14 @@
 package apiserver
 
-import "github.com/Io666777/fileTranslator/internal/app/store"
-
 type Config struct {
-	BindAddr string `toml:"bind_addr"`
-	LogLevel string `toml:"log_level"`
-	Store    *store.Config
+	BindAddr    string `toml:"bind_addr"`
+	LogLevel    string `toml:"log_level"`
+	DatabaseURL string `tom:"database_url"`
 }
 
 func NewConfig() *Config {
 	return &Config{
 		BindAddr: ":5500",
 		LogLevel: "debug",
-		Store: store.NewConfig(),
 	}
 }
