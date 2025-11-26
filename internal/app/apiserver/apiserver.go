@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/Io666777/fileTranslator/internal/app/store/sqlstore"
+	"github.com/gorilla/sessions"
 	_ "github.com/lib/pq"
 )
 
@@ -16,7 +17,8 @@ func Start(config *Config) error {
 	defer db.Close()
 	
 	store := sqlstore.New(db)
-	srv := newServer(store)// тут ошибка undefined: newServer
+	sessionStore :=sessions.NewCookieStore([]byte(config.SessionKey))
+	srv := newServer(store, sessionStore)// тут ошибка undefined: newServer
 
 	return http.ListenAndServe(config.BindAddr, srv)
 }
