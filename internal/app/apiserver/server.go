@@ -1,24 +1,33 @@
 package apiserver
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/Io666777/fileTranslator/internal/app/model"
 	"github.com/Io666777/fileTranslator/internal/app/store"
+	"github.com/google/uuid"
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 	"github.com/sirupsen/logrus"
 )
 
 const (
-	sessionName = "ft"
+	sessionName        = "ft"
+	ctxKeyUser  ctxKey = iota
+	ctxKeyRequestID
 )
 
 var (
 	errIncorrectEmailOrPassword = errors.New("incorrect email or password")
+	errNotAuthenticated         = errors.New("not authenticated")
 )
+
+type ctxKey int8
 
 type server struct {
 	router       *mux.Router
@@ -43,11 +52,75 @@ func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *server) configureRouter() {
+	s.router.Use(s.setRequestID) // Исправлено: setRequstID -> setRequestID
+	s.router.Use(s.logRequest)
+	s.router.Use(handlers.CORS(handlers.AllowedOrigins([]string{"*"})))
 	s.router.HandleFunc("/users", s.handleUsersCreate()).Methods("POST")
 	s.router.HandleFunc("/sessions", s.handleSessionsCreate()).Methods("POST")
+
+	private := s.router.PathPrefix("/private").Subrouter()
+	private.Use(s.authenticateUser)
+	private.HandleFunc("/whoami", s.handleWhoami()).Methods("GET")
 }
 
-func
+func (s *server) setRequestID(next http.Handler) http.Handler { // Исправлено: setRequstID -> setRequestID
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		id := uuid.New().String()
+		w.Header().Set("X-Request-ID", id) // Исправлено: X-Requst-ID -> X-Request-ID
+		next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), ctxKeyRequestID, id)))
+	})
+}
+
+func (s *server) logRequest(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		logger := s.logger.WithFields(logrus.Fields{ // Исправлено: WithField -> WithFields
+			"remote_addr": r.RemoteAddr,
+			"request_id":  r.Context().Value(ctxKeyRequestID),
+		})
+		logger.Infof("started %s %s", r.Method, r.RequestURI)
+
+		start := time.Now()
+		rw := &ResponseWriter{w, http.StatusOK}
+		next.ServeHTTP(w, r)
+
+		logger.Infof("completed with %v", rw.code, http.StatusText(rw.code), time.Since(start)) // Исправлено: time.Now().Sub(start) -> time.Since(start)
+	})
+}
+
+func (s *server) authenticateUser(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		session, err := s.sessionStore.Get(r, sessionName)
+		if err != nil {
+			s.error(w, r, http.StatusInternalServerError, err)
+			return
+		}
+
+		id, ok := session.Values["user_id"]
+		if !ok {
+			s.error(w, r, http.StatusUnauthorized, errNotAuthenticated)
+			return
+		}
+
+		u, err := s.store.User().Find(id.(int))
+		if err != nil {
+			s.error(w, r, http.StatusUnauthorized, errNotAuthenticated)
+			return
+		}
+
+		next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), ctxKeyUser, u)))
+	})
+}
+
+func (s *server) handleWhoami() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		user, ok := r.Context().Value(ctxKeyUser).(*model.User)
+		if !ok {
+			s.error(w, r, http.StatusInternalServerError, errors.New("user not found in context"))
+			return
+		}
+		s.respond(w, r, http.StatusOK, user)
+	}
+}
 
 func (s *server) handleUsersCreate() http.HandlerFunc {
 	type request struct {
