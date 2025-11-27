@@ -6,14 +6,15 @@ import (
 )
 
 type Store struct {
-	userRepository *UserRepository
+	userRepository        *UserRepository
+	fileRepository        *FileRepository
+	translationRepository *TranslationRepository
 }
-//New
+
 func New() *Store {
 	return &Store{}
 }
 
-//user
 func (s *Store) User() store.UserRepository {
 	if s.userRepository != nil {
 		return s.userRepository
@@ -24,4 +25,28 @@ func (s *Store) User() store.UserRepository {
 		users: make(map[int]*model.User),
 	}
 	return s.userRepository
+}
+
+func (s *Store) File() store.FileRepository {
+	if s.fileRepository != nil {
+		return s.fileRepository
+	}
+
+	s.fileRepository = &FileRepository{
+		store: s,
+		files: make(map[int]*model.File),
+	}
+	return s.fileRepository
+}
+
+func (s *Store) Translation() store.TranslationRepository {
+	if s.translationRepository != nil {
+		return s.translationRepository
+	}
+
+	s.translationRepository = &TranslationRepository{
+		store:        s,
+		translations: make(map[int]*model.Translation),
+	}
+	return s.translationRepository
 }

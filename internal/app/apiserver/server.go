@@ -56,7 +56,7 @@ func (s *server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *server) configureRouter() {
-	s.router.Use(s.setRequestID) // Исправлено: setRequstID -> setRequestID
+	s.router.Use(s.setRequestID)
 	s.router.Use(s.logRequest)
 	s.router.Use(handlers.CORS(handlers.AllowedOrigins([]string{"*"})))
 	s.router.HandleFunc("/users", s.handleUsersCreate()).Methods("POST")
@@ -65,6 +65,18 @@ func (s *server) configureRouter() {
 	private := s.router.PathPrefix("/private").Subrouter()
 	private.Use(s.authenticateUser)
 	private.HandleFunc("/whoami", s.handleWhoami()).Methods("GET")
+	
+	// Файлы
+	private.HandleFunc("/files", s.handleFilesCreate()).Methods("POST")
+	private.HandleFunc("/files", s.handleFilesList()).Methods("GET")
+	private.HandleFunc("/files/{id:[0-9]+}", s.handleFilesGet()).Methods("GET")
+	private.HandleFunc("/files/{id:[0-9]+}", s.handleFilesDelete()).Methods("DELETE")
+	private.HandleFunc("/files/{id:[0-9]+}/translate", s.handleFilesTranslate()).Methods("POST")
+	private.HandleFunc("/files/{id:[0-9]+}/download", s.handleFilesDownload()).Methods("GET")
+	
+	// Переводы
+	private.HandleFunc("/translations", s.handleTranslationsList()).Methods("GET")
+	private.HandleFunc("/translations/{id:[0-9]+}", s.handleTranslationsGet()).Methods("GET")
 }
 
 func (s *server) setRequestID(next http.Handler) http.Handler { // Исправлено: setRequstID -> setRequestID
@@ -77,7 +89,7 @@ func (s *server) setRequestID(next http.Handler) http.Handler { // Исправ�
 
 func (s *server) logRequest(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		logger := s.logger.WithFields(logrus.Fields{ // Исправлено: WithField -> WithFields
+		logger := s.logger.WithFields(logrus.Fields{
 			"remote_addr": r.RemoteAddr,
 			"request_id":  r.Context().Value(ctxKeyRequestID),
 		})
@@ -85,12 +97,16 @@ func (s *server) logRequest(next http.Handler) http.Handler {
 
 		start := time.Now()
 		rw := &ResponseWriter{w, http.StatusOK}
-		next.ServeHTTP(w, r)
+		next.ServeHTTP(rw, r) // Исправлено: next.ServeHTTP(w, r) -> next.ServeHTTP(rw, r)
 
-		logger.Infof("completed with %v", rw.code, http.StatusText(rw.code), time.Since(start)) // Исправлено: time.Now().Sub(start) -> time.Since(start)
+		// Альтернативное решение с WithFields
+		logger.WithFields(logrus.Fields{
+			"status_code": rw.code,
+			"status":      http.StatusText(rw.code),
+			"duration":    time.Since(start),
+		}).Info("completed request")
 	})
 }
-
 func (s *server) authenticateUser(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		session, err := s.sessionStore.Get(r, sessionName)

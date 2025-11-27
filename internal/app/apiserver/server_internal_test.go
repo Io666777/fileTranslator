@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/Io666777/fileTranslator/internal/app/model"
+	// "github.com/Io666777/fileTranslator/internal/app/store" // интерфейс Store
 	"github.com/Io666777/fileTranslator/internal/app/store/sqlstore/teststore"
 	"github.com/gorilla/securecookie"
 	"github.com/gorilla/sessions"
@@ -16,9 +17,10 @@ import (
 )
 
 func TestServer_AuthenticateUser(t *testing.T) {
-    store := teststore.New()
+    // Используем другое имя для переменной
+    testStore := teststore.New()
     u := model.TestUser(t)
-    store.User().Create(u)
+    testStore.User().Create(u)
 
     testCases := []struct {
         name         string
@@ -40,7 +42,7 @@ func TestServer_AuthenticateUser(t *testing.T) {
     }
 
     secretKey := []byte("secret")
-    s := newServer(store, sessions.NewCookieStore(secretKey))//cannot use store (variable of type *teststore.Store) as store.Store value in argument to newServer: *teststore.Store does not implement store.Store (missing method File)
+    s := newServer(testStore, sessions.NewCookieStore(secretKey))
     sc := securecookie.New(secretKey, nil)
     handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
         w.WriteHeader(http.StatusOK)
@@ -60,96 +62,99 @@ func TestServer_AuthenticateUser(t *testing.T) {
     }
 }
 
-
 func TestServer_HandleUsersCreate(t *testing.T) {
-	s := newServer(teststore.New(), sessions.NewCookieStore([]byte("secret")))//cannot use teststore.New() (value of type *teststore.Store) as store.Store value in argument to newServer: *teststore.Store does not implement store.Store (missing method File)
-	testCases := []struct {
-		name         string
-		payload      interface{}
-		expectedCode int
-	}{
-		{
-			name: "valid",
-			payload: map[string]string{
-				"email":    "user@example.org",
-				"password": "password",
-			},
-			expectedCode: http.StatusCreated,
-		},
-		{
-			name:         "invalid payload",
-			payload:      "invalid",
-			expectedCode: http.StatusBadRequest,
-		},
-		{
-			name: "invalid params",
-			payload: map[string]string{
-				"email": "invalid",
-			},
-			expectedCode: http.StatusUnprocessableEntity,
-		},
-	}
+    testStore := teststore.New()
+    s := newServer(testStore, sessions.NewCookieStore([]byte("secret")))
+    
+    testCases := []struct {
+        name         string
+        payload      interface{}
+        expectedCode int
+    }{
+        {
+            name: "valid",
+            payload: map[string]string{
+                "email":    "user@example.org",
+                "password": "password",
+            },
+            expectedCode: http.StatusCreated,
+        },
+        {
+            name:         "invalid payload",
+            payload:      "invalid",
+            expectedCode: http.StatusBadRequest,
+        },
+        {
+            name: "invalid params",
+            payload: map[string]string{
+                "email": "invalid",
+            },
+            expectedCode: http.StatusUnprocessableEntity,
+        },
+    }
 
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			rec := httptest.NewRecorder()
-			b := &bytes.Buffer{}
-			json.NewEncoder(b).Encode(tc.payload)
-			req, _ := http.NewRequest(http.MethodPost, "/users", b)
-			s.ServeHTTP(rec, req)
-			assert.Equal(t, tc.expectedCode, rec.Code)
-		})
-	}
+    for _, tc := range testCases {
+        t.Run(tc.name, func(t *testing.T) {
+            rec := httptest.NewRecorder()
+            b := &bytes.Buffer{}
+            json.NewEncoder(b).Encode(tc.payload)
+            req, _ := http.NewRequest(http.MethodPost, "/users", b)
+            s.ServeHTTP(rec, req)
+            assert.Equal(t, tc.expectedCode, rec.Code)
+        })
+    }
 }
 
 func TestServer_HandleSessionCreate(t *testing.T) {
-	u := model.TestUser(t)
-	store := teststore.New()
-	store.User().Create(u)
-	s := newServer(store, sessions.NewCookieStore([]byte("secret")))//cannot use store (variable of type *teststore.Store) as store.Store value in argument to newServer: *teststore.Store does not implement store.Store (missing method File)
-	testCases := []struct {
-		name         string
-		payload      interface{}
-		expectedCode int
-	}{
-		{
-			name: "valid",
-			payload: map[string]string{
-				"email":    u.Email,
-				"password": u.Password,
-			},
-			expectedCode: http.StatusOK,
-		},
-		{
-			name:         "invalid payload",
-			payload:      "invalid",
-			expectedCode: http.StatusBadRequest,
-		},
-		{
-			name: "invalid email",
-			payload: map[string]string{
-				"email":    "invalid",
-				"password": u.Password,
-			},
-			expectedCode: http.StatusUnauthorized,
-		},
-		{
-			name: "invalid email",
-			payload: map[string]string{
-				"email":    u.Email,
-				"password": "invalid",
-			},
-			expectedCode: http.StatusUnauthorized,
-		},
-	}
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			rec := httptest.NewRecorder()
-			b := &bytes.Buffer{}
-			json.NewEncoder(b).Encode(tc.payload)
-			req, _ := http.NewRequest(http.MethodPost, "/sessions", b)
-			s.ServeHTTP(rec, req)
-			assert.Equal(t, tc.expectedCode, rec.Code)
-		})
-	}
+    u := model.TestUser(t)
+    testStore := teststore.New()
+    testStore.User().Create(u)
+    s := newServer(testStore, sessions.NewCookieStore([]byte("secret")))
+    
+    testCases := []struct {
+        name         string
+        payload      interface{}
+        expectedCode int
+    }{
+        {
+            name: "valid",
+            payload: map[string]string{
+                "email":    u.Email,
+                "password": u.Password,
+            },
+            expectedCode: http.StatusOK,
+        },
+        {
+            name:         "invalid payload",
+            payload:      "invalid",
+            expectedCode: http.StatusBadRequest,
+        },
+        {
+            name: "invalid email",
+            payload: map[string]string{
+                "email":    "invalid",
+                "password": u.Password,
+            },
+            expectedCode: http.StatusUnauthorized,
+        },
+        {
+            name: "invalid password", // исправлено имя
+            payload: map[string]string{
+                "email":    u.Email,
+                "password": "invalid",
+            },
+            expectedCode: http.StatusUnauthorized,
+        },
+    }
+    
+    for _, tc := range testCases {
+        t.Run(tc.name, func(t *testing.T) {
+            rec := httptest.NewRecorder()
+            b := &bytes.Buffer{}
+            json.NewEncoder(b).Encode(tc.payload)
+            req, _ := http.NewRequest(http.MethodPost, "/sessions", b)
+            s.ServeHTTP(rec, req)
+            assert.Equal(t, tc.expectedCode, rec.Code)
+        })
+    }
 }
