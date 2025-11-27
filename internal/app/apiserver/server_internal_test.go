@@ -40,7 +40,7 @@ func TestServer_AuthenticateUser(t *testing.T) {
     }
 
     secretKey := []byte("secret")
-    s := newServer(store, sessions.NewCookieStore(secretKey))
+    s := newServer(store, sessions.NewCookieStore(secretKey))//cannot use store (variable of type *teststore.Store) as store.Store value in argument to newServer: *teststore.Store does not implement store.Store (missing method File)
     sc := securecookie.New(secretKey, nil)
     handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
         w.WriteHeader(http.StatusOK)
@@ -62,7 +62,7 @@ func TestServer_AuthenticateUser(t *testing.T) {
 
 
 func TestServer_HandleUsersCreate(t *testing.T) {
-	s := newServer(teststore.New(), sessions.NewCookieStore([]byte("secret")))
+	s := newServer(teststore.New(), sessions.NewCookieStore([]byte("secret")))//cannot use teststore.New() (value of type *teststore.Store) as store.Store value in argument to newServer: *teststore.Store does not implement store.Store (missing method File)
 	testCases := []struct {
 		name         string
 		payload      interface{}
@@ -106,7 +106,7 @@ func TestServer_HandleSessionCreate(t *testing.T) {
 	u := model.TestUser(t)
 	store := teststore.New()
 	store.User().Create(u)
-	s := newServer(store, sessions.NewCookieStore([]byte("secret")))
+	s := newServer(store, sessions.NewCookieStore([]byte("secret")))//cannot use store (variable of type *teststore.Store) as store.Store value in argument to newServer: *teststore.Store does not implement store.Store (missing method File)
 	testCases := []struct {
 		name         string
 		payload      interface{}

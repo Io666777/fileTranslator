@@ -4,7 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"io"
 	"net/http"
+	"os"
+	"strconv"
 	"time"
 
 	"github.com/Io666777/fileTranslator/internal/app/model"
@@ -193,5 +197,267 @@ func (s *server) respond(w http.ResponseWriter, r *http.Request, code int, data 
 	w.WriteHeader(code)
 	if data != nil {
 		json.NewEncoder(w).Encode(data)
+	}
+}
+
+// Загрузка файла
+func (s *server) handleFilesCreate() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// Максимальный размер файла - 10MB
+		if err := r.ParseMultipartForm(10 << 20); err != nil {
+			s.error(w, r, http.StatusBadRequest, err)
+			return
+		}
+		
+		file, header, err := r.FormFile("file")
+		if err != nil {
+			s.error(w, r, http.StatusBadRequest, err)
+			return
+		}
+		defer file.Close()
+		
+		user := r.Context().Value(ctxKeyUser).(*model.User)
+		
+		// Сохраняем файл
+		filename := header.Filename
+		filePath := fmt.Sprintf("storage/uploads/%d_%d_%s", user.ID, time.Now().Unix(), filename)
+		
+		// Создаем директорию если нет
+		os.MkdirAll("storage/uploads", 0755)
+		
+		dst, err := os.Create(filePath)
+		if err != nil {
+			s.error(w, r, http.StatusInternalServerError, err)
+			return
+		}
+		defer dst.Close()
+		
+		// Копируем файл
+		fileSize, err := io.Copy(dst, file)
+		if err != nil {
+			s.error(w, r, http.StatusInternalServerError, err)
+			return
+		}
+		
+		// Сохраняем в БД
+		f := &model.File{
+			UserID:       user.ID,
+			Filename:     filename,
+			OriginalPath: filePath,
+			FileSize:     fileSize,
+			MimeType:     header.Header.Get("Content-Type"),
+			Status:       "uploaded",
+		}
+		
+		if err := s.store.File().Create(f); err != nil {//s.store.File undefined (type store.Store has no field or method File)
+			s.error(w, r, http.StatusUnprocessableEntity, err)
+			return
+		}
+		
+		s.respond(w, r, http.StatusCreated, f)
+	}
+}
+
+// Список файлов пользователя
+func (s *server) handleFilesList() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		user := r.Context().Value(ctxKeyUser).(*model.User)
+		
+		files, err := s.store.File().FindByUserID(user.ID)//s.store.File undefined (type store.Store has no field or method File)
+		if err != nil {
+			s.error(w, r, http.StatusInternalServerError, err)
+			return
+		}
+		
+		s.respond(w, r, http.StatusOK, files)
+	}
+}
+
+// Получить информацию о файле
+func (s *server) handleFilesGet() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		id, err := strconv.Atoi(vars["id"])
+		if err != nil {
+			s.error(w, r, http.StatusBadRequest, err)
+			return
+		}
+		
+		user := r.Context().Value(ctxKeyUser).(*model.User)
+		file, err := s.store.File().Find(id)//s.store.File undefined (type store.Store has no field or method File)
+		if err != nil {
+			s.error(w, r, http.StatusNotFound, err)
+			return
+		}
+		
+		// Проверяем что файл принадлежит пользователю
+		if file.UserID != user.ID {
+			s.error(w, r, http.StatusForbidden, errors.New("access denied"))
+			return
+		}
+		
+		s.respond(w, r, http.StatusOK, file)
+	}
+}
+
+// Удаление файла
+func (s *server) handleFilesDelete() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		id, err := strconv.Atoi(vars["id"])
+		if err != nil {
+			s.error(w, r, http.StatusBadRequest, err)
+			return
+		}
+		
+		user := r.Context().Value(ctxKeyUser).(*model.User)
+		file, err := s.store.File().Find(id)//s.store.File undefined (type store.Store has no field or method File)
+		if err != nil {
+			s.error(w, r, http.StatusNotFound, err)
+			return
+		}
+		
+		if file.UserID != user.ID {
+			s.error(w, r, http.StatusForbidden, errors.New("access denied"))
+			return
+		}
+		
+		// Удаляем файл с диска
+		os.Remove(file.OriginalPath)
+		
+		// Удаляем из БД
+		if err := s.store.File().Delete(id); err != nil {//s.store.File undefined (type store.Store has no field or method File)
+			s.error(w, r, http.StatusInternalServerError, err)
+			return
+		}
+		
+		s.respond(w, r, http.StatusOK, map[string]string{"status": "deleted"})
+	}
+}
+
+// Запрос перевода файла
+func (s *server) handleFilesTranslate() http.HandlerFunc {
+	type request struct {
+		SourceLang string `json:"source_lang"`
+		TargetLang string `json:"target_lang"`
+	}
+	
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		fileID, err := strconv.Atoi(vars["id"])
+		if err != nil {
+			s.error(w, r, http.StatusBadRequest, err)
+			return
+		}
+		
+		req := &request{}
+		if err := json.NewDecoder(r.Body).Decode(req); err != nil {
+			s.error(w, r, http.StatusBadRequest, err)
+			return
+		}
+		
+		user := r.Context().Value(ctxKeyUser).(*model.User)
+		file, err := s.store.File().Find(fileID)//s.store.File undefined (type store.Store has no field or method File)
+		if err != nil {
+			s.error(w, r, http.StatusNotFound, err)
+			return
+		}
+		
+		if file.UserID != user.ID {
+			s.error(w, r, http.StatusForbidden, errors.New("access denied"))
+			return
+		}
+		
+		// Создаем запрос на перевод
+		translation := &model.Translation{
+			FileID:     file.ID,
+			SourceLang: req.SourceLang,
+			TargetLang: req.TargetLang,
+			Status:     "pending",
+		}
+		
+		if err := s.store.Translation().Create(translation); err != nil {//s.store.Translation undefined (type store.Store has no field or method Translation)
+			s.error(w, r, http.StatusUnprocessableEntity, err)
+			return
+		}
+		
+		s.respond(w, r, http.StatusCreated, translation)
+	}
+}
+
+// Скачивание файла
+func (s *server) handleFilesDownload() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		id, err := strconv.Atoi(vars["id"])
+		if err != nil {
+			s.error(w, r, http.StatusBadRequest, err)
+			return
+		}
+		
+		user := r.Context().Value(ctxKeyUser).(*model.User)
+		file, err := s.store.File().Find(id)//s.store.File undefined (type store.Store has no field or method File)
+		if err != nil {
+			s.error(w, r, http.StatusNotFound, err)
+			return
+		}
+		
+		if file.UserID != user.ID {
+			s.error(w, r, http.StatusForbidden, errors.New("access denied"))
+			return
+		}
+		
+		// Отдаем файл
+		w.Header().Set("Content-Disposition", "attachment; filename="+file.Filename)
+		w.Header().Set("Content-Type", file.MimeType)
+		http.ServeFile(w, r, file.OriginalPath)
+	}
+}
+
+// Список переводов пользователя
+func (s *server) handleTranslationsList() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		user := r.Context().Value(ctxKeyUser).(*model.User)
+		
+		translations, err := s.store.Translation().FindByUserID(user.ID)//s.store.Translation undefined (type store.Store has no field or method Translation)
+		if err != nil {
+			s.error(w, r, http.StatusInternalServerError, err)
+			return
+		}
+		
+		s.respond(w, r, http.StatusOK, translations)
+	}
+}
+
+// Получить информацию о переводе
+func (s *server) handleTranslationsGet() http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		id, err := strconv.Atoi(vars["id"])
+		if err != nil {
+			s.error(w, r, http.StatusBadRequest, err)
+			return
+		}
+		
+		user := r.Context().Value(ctxKeyUser).(*model.User)
+		translation, err := s.store.Translation().Find(id)//s.store.Translation undefined (type store.Store has no field or method Translation)
+		if err != nil {
+			s.error(w, r, http.StatusNotFound, err)
+			return
+		}
+		
+		// Проверяем что перевод принадлежит пользователю
+		file, err := s.store.File().Find(translation.FileID)//s.store.File undefined (type store.Store has no field or method File)
+		if err != nil {
+			s.error(w, r, http.StatusNotFound, err)
+			return
+		}
+		
+		if file.UserID != user.ID {
+			s.error(w, r, http.StatusForbidden, errors.New("access denied"))
+			return
+		}
+		
+		s.respond(w, r, http.StatusOK, translation)
 	}
 }
