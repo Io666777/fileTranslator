@@ -19,6 +19,9 @@ RUN wget https://github.com/golang-migrate/migrate/releases/download/v4.17.0/mig
     && mv migrate /usr/local/bin/ \
     && rm migrate.linux-amd64.tar.gz
 
+# Копируем Docker конфиг (если создали отдельный файл)
+# COPY config.docker.toml config.toml
+
 # Собираем приложение
 RUN go build -o main ./cmd/apiserver/main.go
 

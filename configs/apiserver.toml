@@ -1,4 +1,5 @@
 bind_addr = ":5500"
 log_level = "debug"
-database_url = "host=localhost dbname=ft user=postgres password=password sslmode=disable"
-session_key=" "
+database_url = "host=db dbname=ft user=postgres password=password sslmode=disable"
+session_key="very-strong-secret-key-32-chars-minimum-123"
+libretranslate_url = "http://libretranslate:5000"

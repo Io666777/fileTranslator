@@ -18,7 +18,7 @@ func Start(config *Config) error {
 	
 	store := sqlstore.New(db)
 	sessionStore :=sessions.NewCookieStore([]byte(config.SessionKey))
-	srv := newServer(store, sessionStore)// тут ошибка undefined: newServer
+	srv := newServer(store, sessionStore) 
 
 	return http.ListenAndServe(config.BindAddr, srv)
 }

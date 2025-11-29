@@ -49,7 +49,7 @@ func newServer(store store.Store, sessionStore sessions.Store) *server {
 		logger:        logrus.New(),
 		store:         store,
 		sessionStore:  sessionStore,
-		translator:    translator.NewLibreTranslator("http://localhost:5000"), // ДОБАВИТЬ
+		translator:    translator.NewLibreTranslator("http://libretranslate:5000"), // ДОБАВИТЬ
 		fileProcessor: translator.NewFileProcessor(),                          // ДОБАВИТЬ
 	}
 	s.configureRouter()
