@@ -1,8 +1,13 @@
 package service
 
-import "filetranslation/pkg/repository"
+import (
+	"filetranslation/pkg/models"
+	"filetranslation/pkg/repository"
+)
 
-type Authorization interface{}
+type Authorization interface {
+	CreateUser(user models.User) (int, error)
+}
 
 type Fileb interface{}
 
@@ -15,5 +20,7 @@ type Service struct {
 }
 
 func NewService(repos *repository.Repository) *Service {
-	return &Service{}
+	return &Service{
+		Authorization: NewAuthService(repos.Authorization),
+	}
 }

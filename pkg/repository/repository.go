@@ -1,19 +1,27 @@
 package repository
 
-type Authorization interface{}
+import (
+	"filetranslation/pkg/models"
+
+	"github.com/jmoiron/sqlx"
+)
+
+type Authorization interface {
+	CreateUser(user models.User) (int, error)
+}
 
 type Fileb interface{}
 
 type Filea interface{}
 
-type Repository struct{
+type Repository struct {
 	Authorization
 	Fileb
 	Filea
 }
 
-func NewRepository() *Repository {
-	return &Repository{}
+func NewRepository(db *sqlx.DB) *Repository {
+	return &Repository{
+		Authorization: NewAuthPostgres(db),
+	}
 }
-
-

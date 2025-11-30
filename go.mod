@@ -20,6 +20,7 @@ require (
 	github.com/go-viper/mapstructure/v2 v2.4.0 // indirect
 	github.com/goccy/go-json v0.10.2 // indirect
 	github.com/goccy/go-yaml v1.18.0 // indirect
+	github.com/jmoiron/sqlx v1.4.0 // indirect
 	github.com/joho/godotenv v1.5.1 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
@@ -31,6 +32,7 @@ require (
 	github.com/quic-go/qpack v0.5.1 // indirect
 	github.com/quic-go/quic-go v0.54.0 // indirect
 	github.com/sagikazarmark/locafero v0.11.0 // indirect
+	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/sourcegraph/conc v0.3.1-0.20240121214520-5f936abd7ae8 // indirect
 	github.com/spf13/afero v1.15.0 // indirect
 	github.com/spf13/cast v1.10.0 // indirect
@@ -46,7 +48,7 @@ require (
 	golang.org/x/mod v0.26.0 // indirect
 	golang.org/x/net v0.42.0 // indirect
 	golang.org/x/sync v0.16.0 // indirect
-	golang.org/x/sys v0.35.0 // indirect
+	golang.org/x/sys v0.38.0 // indirect
 	golang.org/x/text v0.28.0 // indirect
 	golang.org/x/tools v0.35.0 // indirect
 	google.golang.org/protobuf v1.36.9 // indirect
@@ -59,6 +61,7 @@ require (
 	github.com/ilyakaznacheev/cleanenv v1.5.0
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
+	github.com/lib/pq v1.10.9
 	github.com/mattn/go-sqlite3 v1.14.32
 	gorm.io/driver/mysql v1.5.2
 )
