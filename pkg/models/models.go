@@ -9,7 +9,7 @@ type User struct {
 
 type File struct {
 	ID        int    `json:"id" db:"id"`
-	Title     string `json:"title" db:"title"`
+	Title     string `json:"title" binding:"required"`
 	Path      string `json:"path" db:"path"`
 	Status    string `json:"status" db:"status"` // uploaded, processing, translated
 	UserID    int    `json:"user_id" db:"user_id"`
