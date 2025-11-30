@@ -1,2 +1,2 @@
-DROP TABLE IF EXISTS translation_jobs;
+DROP TABLE IF EXISTS files;
 DROP TABLE IF EXISTS users;

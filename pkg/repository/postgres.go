@@ -8,10 +8,9 @@ import (
 )
 
 const (
-	usersTable            = "users"
-	translationJobsTable  = "translation_jobs"
+	usersTable = "users"
+	filesTable = "files"
 )
-
 
 type Config struct {
 	Host     string

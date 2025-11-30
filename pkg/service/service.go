@@ -7,16 +7,11 @@ import (
 
 type Authorization interface {
 	CreateUser(user models.User) (int, error)
+	GenerateToken(username, password string) (string, error)
 }
-
-type Fileb interface{}
-
-type Filea interface{}
 
 type Service struct {
 	Authorization
-	Fileb
-	Filea
 }
 
 func NewService(repos *repository.Repository) *Service {

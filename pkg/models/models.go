@@ -1,20 +1,17 @@
-package models // исправлено filetranslator -> models
+package models
 
 type User struct {
-	ID       int    `json:"-" gorm:"primaryKey"`
-	Name     string `json:"name" binding:"required"`
-	Username string `json:"username" gorm:"unique" binding:"required"`
-	Password string `json:"password" binding:"required"`
+	ID       int    `json:"-" db:"id"`
+	Name     string `json:"name" binding:"required" db:"name"`
+	Username string `json:"username" binding:"required" db:"username"`
+	Password string `json:"password" binding:"required" db:"password_hash"`
 }
 
-type File struct { // объединяем Filebt и Fileat в одну структуру
-	ID    int    `json:"id" gorm:"primaryKey"`
-	Title string `json:"title"`
-	Path  string `json:"path"`
-	// Добавляем поля для перевода
-	OriginalText   string `json:"original_text"`
-	TranslatedText string `json:"translated_text"`
-	SourceLanguage string `json:"source_language"`
-	TargetLanguage string `json:"target_language"`
-	Status         string `json:"status"` // uploaded, processing, translated
+type File struct {
+	ID        int    `json:"id" db:"id"`
+	Title     string `json:"title" db:"title"`
+	Path      string `json:"path" db:"path"`
+	Status    string `json:"status" db:"status"` // uploaded, processing, translated
+	UserID    int    `json:"user_id" db:"user_id"`
+	CreatedAt string `json:"created_at" db:"created_at"`
 }
