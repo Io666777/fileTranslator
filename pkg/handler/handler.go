@@ -2,6 +2,7 @@ package handler
 
 import (
 	"filetranslation/pkg/service"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -16,6 +17,11 @@ func NewHandler(services *service.Service) *Handler {
 func (h *Handler) InitRoutes() *gin.Engine {
 	router := gin.New()
 
+	router.Static("/front", "./front")
+	router.GET("/", func(c *gin.Context) {
+		c.File("./front/index.html")
+	})
+
 	auth := router.Group("/auth")
 	{
 		auth.POST("/sign-up", h.signUp) // исправлено на kebab-case
@@ -26,11 +32,11 @@ func (h *Handler) InitRoutes() *gin.Engine {
 	{
 		files := api.Group("/files")
 		{
-			files.POST("/", h.createFile)
-			files.GET("/", h.getAllFiles)
-			files.GET("/:id", h.getFileById)
-			files.POST("/:id/translations", h.createTranslation)
-			files.DELETE("/:id", h.deleteFile)
+			files.POST("/upload", h.uploadFile)               // ЗАГРУЗКА
+			files.GET("/", h.getAllFiles)                     // СПИСОК
+			files.GET("/:id/download", h.downloadFile)        // СКАЧИВАНИЕ
+			files.POST("/:id/translate", h.createTranslation) // ПЕРЕВОД
+			files.DELETE("/:id", h.deleteFile)                // УДАЛЕНИЕ
 		}
 	}
 

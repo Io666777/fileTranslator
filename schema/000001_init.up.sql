@@ -14,6 +14,7 @@ CREATE TABLE files
     title VARCHAR(255) NOT NULL,
     path VARCHAR(500) NOT NULL,
     status VARCHAR(50) DEFAULT 'uploaded',
+    file_content BYTEA, -- ДОБАВИЛИ ЭТУ СТРОКУ
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

@@ -21,8 +21,7 @@ func main() {
 	if err := godotenv.Load(); err != nil {
 		logrus.Fatalf("error loading env variables: %s", err.Error())
 	}
-	
-	// Прямое подключение без конфига
+
 	db, err := repository.NewPostgresDB(repository.Config{
 		Host:     viper.GetString("db.host"),
 		Port:     viper.GetString("db.port"),
@@ -36,25 +35,33 @@ func main() {
 	}
 	defer db.Close()
 
-	// Инициализация репозиториев, сервисов и хендлеров
 	repos := repository.NewRepository(db)
-	services := service.NewService(repos)
+
+	// БЕРЕМ URL ИЗ КОНФИГА
+	translationService := service.NewTranslationService(
+		viper.GetString("translation.api_url"),
+	)
+
+	services := &service.Service{
+		Authorization: service.NewAuthService(repos.Authorization),
+		File:          service.NewFileService(repos.File),
+		Translation:   translationService,
+	}
+
 	handlers := handler.NewHandler(services)
 
-	// Запуск сервера
 	srv := new(internal.Server)
-
-	// Получаем порт из конфига с дефолтным значением
 	port := viper.GetString("port")
 	if port == "" {
 		port = "8080"
 	}
-	
-	if err := srv.Run(port, handlers.InitRoutes()); err != nil { // исправлено
-		logrus.Fatalf("error occurred while running http server: %s", err.Error()) // исправлено
+
+	if err := srv.Run(port, handlers.InitRoutes()); err != nil {
+		logrus.Fatalf("error occurred while running http server: %s", err.Error())
 	}
 }
 
+// ДОБАВИТЬ ЭТУ ФУНКЦИЮ
 func initConfig() error {
 	viper.AddConfigPath("configs")
 	viper.SetConfigName("config")

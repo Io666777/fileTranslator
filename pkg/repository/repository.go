@@ -27,6 +27,6 @@ type Repository struct {
 func NewRepository(db *sqlx.DB) *Repository {
 	return &Repository{
 		Authorization: NewAuthPostgres(db),
-		File:          NewFilePostgres(db), //cannot use NewAuthPostgres(db) (value of type *AuthPostgres) as Authorization value in struct literal: *AuthPostgres does not implement Authorization (wrong type for method CreateUser)have CreateUser(string, string) (models.User, error)want CreateUser(models.User) (int, error)
-	}
+		File:          NewFilePostgres(db), 
+}
 }

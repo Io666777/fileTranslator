@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>File Translator</title>
+    <style>
+        body { font-family: Arial; max-width: 600px; margin: 40px auto; padding: 20px; }
+        .container { margin-bottom: 20px; }
+        input, button, textarea { width: 100%; padding: 10px; margin: 5px 0; }
+        button { background: #007bff; color: white; border: none; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .file-item { border: 1px solid #ddd; padding: 10px; margin: 10px 0; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <h1>📁 File Translator</h1>
+
+    <!-- Аутентификация -->
+    <div id="auth-section">
+        <div class="container">
+            <h3>Вход / Регистрация</h3>
+            <input type="text" id="username" placeholder="Username">
+            <input type="password" id="password" placeholder="Password">
+            <button onclick="signUp()">Регистрация</button>
+            <button onclick="signIn()">Войти</button>
+        </div>
+    </div>
+
+    <!-- Основной функционал -->
+    <div id="main-section" class="hidden">
+        <button onclick="logout()">Выйти</button>
+        
+        <div class="container">
+            <h3>Загрузить файл</h3>
+            <input type="file" id="file-input">
+            <button onclick="uploadFile()">Загрузить</button>
+        </div>
+
+        <div class="container">
+            <h3>Мои файлы</h3>
+            <div id="files-list"></div>
+        </div>
+    </div>
+
+    <script>
+        let token = localStorage.getItem('token');
+        
+        if (token) {
+            showMainSection();
+        }
+
+        function showMainSection() {
+            document.getElementById('auth-section').classList.add('hidden');
+            document.getElementById('main-section').classList.remove('hidden');
+            loadFiles();
+        }
+
+        async function signUp() {
+            const user = {
+                username: document.getElementById('username').value,
+                password: document.getElementById('password').value,
+                name: document.getElementById('username').value
+            };
+
+            const response = await fetch('/auth/sign-up', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(user)
+            });
+
+            alert(response.ok ? 'Регистрация успешна!' : 'Ошибка регистрации');
+        }
+
+        async function signIn() {
+            const credentials = {
+                username: document.getElementById('username').value,
+                password: document.getElementById('password').value
+            };
+
+            const response = await fetch('/auth/sign-in', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(credentials)
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                token = data.token;
+                localStorage.setItem('token', token);
+                showMainSection();
+            } else {
+                alert('Ошибка входа');
+            }
+        }
+
+        async function uploadFile() {
+            const fileInput = document.getElementById('file-input');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert('Выберите файл');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const response = await fetch('/api/files/upload', {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + token },
+                body: formData
+            });
+
+            if (response.ok) {
+                alert('Файл загружен!');
+                fileInput.value = '';
+                loadFiles();
+            } else {
+                alert('Ошибка загрузки');
+            }
+        }
+
+        async function loadFiles() {
+            const response = await fetch('/api/files/', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+
+            if (response.ok) {
+                const files = await response.json();
+                displayFiles(files);
+            }
+        }
+
+        function displayFiles(files) {
+            const filesList = document.getElementById('files-list');
+            filesList.innerHTML = '';
+
+            files.forEach(file => {
+                const fileItem = document.createElement('div');
+                fileItem.className = 'file-item';
+                fileItem.innerHTML = `
+                    <strong>${file.title}</strong> (${file.status})
+                    <br>
+                    <button onclick="downloadFile(${file.id})">Скачать</button>
+                    <button onclick="translateFile(${file.id})">Перевести</button>
+                    <button onclick="deleteFile(${file.id})">Удалить</button>
+                `;
+                filesList.appendChild(fileItem);
+            });
+        }
+
+        async function translateFile(fileId) {
+            const response = await fetch(`/api/files/${fileId}/translate`, {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+
+            if (response.ok) {
+                alert('Перевод запущен!');
+                loadFiles();
+            } else {
+                alert('Ошибка перевода');
+            }
+        }
+
+        async function downloadFile(fileId) {
+            const response = await fetch(`/api/files/${fileId}/download`, {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+
+            if (response.ok) {
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `file_${fileId}`;
+                a.click();
+            } else {
+                alert('Ошибка скачивания');
+            }
+        }
+
+        async function deleteFile(fileId) {
+            if (!confirm('Удалить файл?')) return;
+
+            const response = await fetch(`/api/files/${fileId}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+
+            if (response.ok) {
+                alert('Файл удален');
+                loadFiles();
+            } else {
+                alert('Ошибка удаления');
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('token');
+            token = null;
+            document.getElementById('auth-section').classList.remove('hidden');
+            document.getElementById('main-section').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>

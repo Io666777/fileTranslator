@@ -16,20 +16,12 @@ func NewFilePostgres(db *sqlx.DB) *FilePostgres {
 }
 
 func (r *FilePostgres) Create(userId int, file models.File) (int, error) {
-	tx, err := r.db.Begin()
-	if err != nil {
-		return 0, err
-	}
-
-	var id int
-	createFileQuery := fmt.Sprintf("INSERT INTO %s (user_id, title, path, status) VALUES ($1, $2, $3, $4) RETURNING id", filesTable)
-	row := tx.QueryRow(createFileQuery, userId, file.Title, file.Path, file.Status)
-	if err := row.Scan(&id); err != nil {
-		tx.Rollback()
-		return 0, err
-	}
-
-	return id, tx.Commit()
+    var id int
+    query := `INSERT INTO files (user_id, title, path, status, file_content) 
+              VALUES ($1, $2, $3, $4, $5) RETURNING id`
+    
+    err := r.db.QueryRow(query, userId, file.Title, file.Path, file.Status, file.FileContent).Scan(&id)
+    return id, err
 }
 
 func (r *FilePostgres) GetAll(userId int) ([]models.File, error) {

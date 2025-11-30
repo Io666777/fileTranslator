@@ -2,7 +2,7 @@ package service
 
 import (
 	"filetranslation/pkg/models"
-	"filetranslation/pkg/repository"
+
 )
 
 type Authorization interface {
@@ -22,11 +22,6 @@ type File interface {
 type Service struct {
 	Authorization
 	File
+	Translation *TranslationService
 }
 
-func NewService(repos *repository.Repository) *Service {
-	return &Service{
-		Authorization: NewAuthService(repos.Authorization),
-		File:          NewFileService(repos.File),
-	}
-}
