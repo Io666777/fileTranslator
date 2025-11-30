@@ -1,13 +1,16 @@
 package handler
 
-import "github.com/gin-gonic/gin"
+import (
+	"filetranslation/pkg/service"
+	"github.com/gin-gonic/gin"
+)
 
 type Handler struct {
-	// позже добавим сервисы
+	services *service.Service
 }
 
-func NewHandler() *Handler {
-	return &Handler{}
+func NewHandler(services *service.Service) *Handler {
+	return &Handler{services: services}
 }
 
 func (h *Handler) InitRoutes() *gin.Engine {
@@ -15,8 +18,8 @@ func (h *Handler) InitRoutes() *gin.Engine {
 
 	auth := router.Group("/auth")
 	{
-		auth.POST("/signUp", h.signUp)//h.signIn undefined (type *Handler has no field or method signIn)
-		auth.POST("/signIn", h.signIn)//h.signIn undefined (type *Handler has no field or method signIn)
+		auth.POST("/sign-up", h.signUp) // исправлено на kebab-case
+		auth.POST("/sign-in", h.signIn)
 	}
 
 	api := router.Group("/api")
@@ -24,8 +27,8 @@ func (h *Handler) InitRoutes() *gin.Engine {
 		files := api.Group("/files")
 		{
 			files.POST("/", h.createFile)
-			files.GET("/", h.getAllFiles) // теперь будет работать
-			files.GET("/:id", h.getFileById) // теперь будет работать
+			files.GET("/", h.getAllFiles)
+			files.GET("/:id", h.getFileById)
 			files.POST("/:id/translations", h.createTranslation)
 			files.DELETE("/:id", h.deleteFile)
 		}

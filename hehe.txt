@@ -1,0 +1,22 @@
+docker pull postgres
+
+docker run --name=ft-db -e POSTGRES_PASSWORD='qwerty' -p 5436:5432 -d --rm postgres
+
+docker ps
+
+migrate create -ext sql -dir ./schema -seq init
+
+migrate -path ./schema -database 'postgres://postgres:qwerty@localhost:5436/postgres?sslmode=disable' up
+
+
+docker ps // оттуда берем страшное значение и вставляем в команду внизу
+
+docker exec -it c51e728047bd /bin/bash 
+
+psql -U postgres
+
+\d
+
+SELECT * FROM schema_migrations;
+
+UPDATE schema_migrations SET version=1, dirty=false;
