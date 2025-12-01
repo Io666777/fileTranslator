@@ -72,7 +72,70 @@ document.addEventListener('DOMContentLoaded', function() {
     if (token) {
         showMainSection();
     }
+    
+    // Инициализируем drag and drop
+    initDragAndDrop();
+    
+    // Добавляем обработчик изменения файла
+    const fileInput = document.getElementById('file-input');
+    if (fileInput) {
+        fileInput.addEventListener('change', function() {
+            if (this.files.length > 0) {
+                updateFileInfo(this.files[0]);
+            } else {
+                resetFileInfo();
+            }
+        });
+    }
 });
+
+// Инициализация drag and drop
+function initDragAndDrop() {
+    const uploadArea = document.getElementById('upload-area');
+    if (!uploadArea) return;
+    
+    // Предотвращаем стандартное поведение браузера
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, preventDefaults, false);
+        document.body.addEventListener(eventName, preventDefaults, false);
+    });
+    
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    
+    // Подсветка при перетаскивании
+    ['dragenter', 'dragover'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, highlight, false);
+    });
+    
+    ['dragleave', 'drop'].forEach(eventName => {
+        uploadArea.addEventListener(eventName, unhighlight, false);
+    });
+    
+    function highlight() {
+        uploadArea.classList.add('highlight');
+    }
+    
+    function unhighlight() {
+        uploadArea.classList.remove('highlight');
+    }
+    
+    // Обработка drop
+    uploadArea.addEventListener('drop', handleDrop, false);
+    
+    function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        
+        if (files.length > 0) {
+            const fileInput = document.getElementById('file-input');
+            fileInput.files = files;
+            updateFileInfo(files[0]);
+        }
+    }
+}
 
 // Показать основную секцию
 function showMainSection() {
@@ -114,8 +177,8 @@ async function signUp() {
             showNotification('Регистрация успешна! Теперь войдите в систему', 'success');
             clearAuthFields();
         } else {
-            const error = await response.text();
-            showNotification(`Ошибка регистрации: ${error}`, 'error');
+            const error = await response.json();
+            showNotification(`Ошибка регистрации: ${error.message}`, 'error');
         }
     } catch (error) {
         showNotification('Ошибка сети', 'error');
@@ -183,6 +246,17 @@ async function uploadFile() {
     // Проверка размера файла (макс 10MB)
     if (file.size > 10 * 1024 * 1024) {
         showNotification('Файл слишком большой (макс 10MB)', 'error');
+        resetFileInfo();
+        return;
+    }
+
+    // Проверка типа файла
+    const allowedTypes = ['.txt', '.doc', '.docx', '.pdf', '.rtf', '.odt', '.html', '.htm', '.json', '.xml', '.csv', '.md'];
+    const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+    
+    if (!allowedTypes.includes(fileExtension)) {
+        showNotification(`Неподдерживаемый тип файла. Разрешены: ${allowedTypes.join(', ')}`, 'error');
+        resetFileInfo();
         return;
     }
 
@@ -198,9 +272,8 @@ async function uploadFile() {
 
         if (response.ok) {
             showNotification('Файл успешно загружен!', 'success');
+            resetFileInfo();
             fileInput.value = '';
-            const fileInfo = document.getElementById('file-info');
-            if (fileInfo) fileInfo.innerHTML = '';
             loadFiles();
         } else {
             const error = await response.text();
@@ -208,6 +281,132 @@ async function uploadFile() {
         }
     } catch (error) {
         showNotification('Ошибка сети', 'error');
+    }
+}
+
+// Отображение информации о выбранном файле
+function updateFileInfo(file) {
+    const fileInfo = document.getElementById('file-info');
+    const uploadArea = document.getElementById('upload-area');
+    
+    if (!file) {
+        resetFileInfo();
+        return;
+    }
+
+    const fileSize = formatFileSize(file.size);
+    const fileType = getFileType(file.name);
+    const fileIcon = getFileIcon(fileType);
+    
+    fileInfo.innerHTML = `
+        <div class="selected-file-info">
+            <i class="fas ${fileIcon}" style="color: #4299e1; margin-right: 12px; font-size: 20px;"></i>
+            <div style="flex: 1;">
+                <div style="font-weight: 600; color: #2d3748; margin-bottom: 4px; word-break: break-all;">
+                    ${file.name}
+                </div>
+                <div style="font-size: 13px; color: #718096; display: flex; gap: 15px; flex-wrap: wrap;">
+                    <span><i class="fas fa-weight-hanging"></i> ${fileSize}</span>
+                    <span><i class="fas fa-file-alt"></i> ${fileType}</span>
+                    <span><i class="far fa-calendar"></i> ${new Date(file.lastModified).toLocaleDateString('ru-RU')}</span>
+                </div>
+            </div>
+            <button onclick="removeSelectedFile()" class="btn-remove-file" title="Удалить файл">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    `;
+    
+    // Обновляем стили upload area
+    if (uploadArea) {
+        uploadArea.classList.add('has-file');
+        const uploadIcon = uploadArea.querySelector('.upload-icon');
+        if (uploadIcon) {
+            uploadIcon.className = `fas ${fileIcon} upload-icon`;
+        }
+        const uploadText = uploadArea.querySelector('p');
+        if (uploadText) {
+            uploadText.textContent = 'Файл выбран. Нажмите "Загрузить" или перетащите другой файл';
+        }
+    }
+}
+
+// Форматирование размера файла
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+// Определение типа файла по расширению
+function getFileType(filename) {
+    const extension = filename.split('.').pop().toLowerCase();
+    
+    const fileTypes = {
+        'txt': 'Текстовый файл',
+        'doc': 'Документ Word',
+        'docx': 'Документ Word',
+        'pdf': 'PDF документ',
+        'rtf': 'RTF документ',
+        'odt': 'OpenDocument',
+        'html': 'HTML файл',
+        'htm': 'HTML файл',
+        'json': 'JSON файл',
+        'xml': 'XML файл',
+        'csv': 'CSV файл',
+        'md': 'Markdown'
+    };
+    
+    return fileTypes[extension] || extension.toUpperCase();
+}
+
+// Получение иконки для типа файла
+function getFileIcon(fileType) {
+    const icons = {
+        'Текстовый файл': 'fa-file-alt',
+        'Документ Word': 'fa-file-word',
+        'PDF документ': 'fa-file-pdf',
+        'RTF документ': 'fa-file-alt',
+        'OpenDocument': 'fa-file-alt',
+        'HTML файл': 'fa-file-code',
+        'JSON файл': 'fa-file-code',
+        'XML файл': 'fa-file-code',
+        'CSV файл': 'fa-file-csv',
+        'Markdown': 'fa-file-alt'
+    };
+    
+    return icons[fileType] || 'fa-file';
+}
+
+// Удаление выбранного файла
+function removeSelectedFile() {
+    const fileInput = document.getElementById('file-input');
+    fileInput.value = '';
+    resetFileInfo();
+}
+
+// Сброс информации о файле
+function resetFileInfo() {
+    const fileInfo = document.getElementById('file-info');
+    const uploadArea = document.getElementById('upload-area');
+    
+    fileInfo.innerHTML = '';
+    
+    if (uploadArea) {
+        uploadArea.classList.remove('has-file');
+        uploadArea.classList.remove('highlight');
+        const uploadIcon = uploadArea.querySelector('.upload-icon');
+        if (uploadIcon) {
+            uploadIcon.className = 'fas fa-cloud-upload-alt upload-icon';
+        }
+        const uploadText = uploadArea.querySelector('p');
+        if (uploadText) {
+            uploadText.textContent = 'Перетащите файл сюда или нажмите для выбора';
+        }
     }
 }
 
@@ -323,6 +522,7 @@ async function translateFile(fileId) {
 
         if (response.ok) {
             showNotification('Перевод запущен! Статус обновится автоматически.', 'success');
+            // Обновляем список файлов через 3 секунды
             setTimeout(loadFiles, 3000);
         } else {
             showNotification('Ошибка запуска перевода', 'error');
@@ -344,7 +544,19 @@ async function downloadFile(fileId) {
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `file_${fileId}`;
+            
+            // Получаем имя файла из заголовков
+            const contentDisposition = response.headers.get('Content-Disposition');
+            let filename = `file_${fileId}`;
+            
+            if (contentDisposition) {
+                const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(contentDisposition);
+                if (matches != null && matches[1]) {
+                    filename = matches[1].replace(/['"]/g, '');
+                }
+            }
+            
+            a.download = filename;
             document.body.appendChild(a);
             a.click();
             window.URL.revokeObjectURL(url);
@@ -377,4 +589,10 @@ async function deleteFile(fileId) {
     } catch (error) {
         showNotification('Ошибка сети', 'error');
     }
+}
+
+// Закрытие модального окна
+function closeModal() {
+    const modal = document.getElementById('modal');
+    modal.classList.add('hidden');
 }
