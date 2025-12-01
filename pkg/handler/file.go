@@ -3,9 +3,12 @@ package handler
 import (
 	"bytes"
 	"filetranslation/pkg/models"
+	"fmt"
 	"io"
 	"net/http"
 	"strconv"
+	"strings"
+	"unicode"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
@@ -157,8 +160,15 @@ func (h *Handler) createTranslation(c *gin.Context) {
 	logrus.Infof("Original file: id=%d, title=%s, content length=%d bytes",
 		file.ID, file.Title, len(file.FileContent))
 
-	// Логируем первые 100 символов содержимого
-	contentPreview := string(file.FileContent)
+	contentText := string(file.FileContent)
+
+	// Определяем язык автоматически
+	fromLang, toLang := detectLanguage(contentText)
+
+	logrus.Infof("Language detection: %s -> %s", fromLang, toLang)
+
+	// Логируем превью
+	contentPreview := contentText
 	if len(contentPreview) > 100 {
 		contentPreview = contentPreview[:100] + "..."
 	}
@@ -170,12 +180,11 @@ func (h *Handler) createTranslation(c *gin.Context) {
 		logrus.Errorf("Failed to update status: %v", err)
 	}
 
-	// Переводим - ИЗМЕНИ ЭТУ СТРОКУ:
-	// Было: "auto", стало: "ru"
+	// Переводим с автоматическим определением языка
 	translatedText, err := h.services.Translation.TranslateText(
-		string(file.FileContent),
-		"ru", // ← ИЗМЕНИЛ "auto" НА "ru"
-		"en",
+		contentText,
+		fromLang,
+		toLang,
 	)
 
 	if err != nil {
@@ -185,11 +194,22 @@ func (h *Handler) createTranslation(c *gin.Context) {
 		return
 	}
 
-	logrus.Infof("Translation successful, translated length: %d bytes", len(translatedText))
+	logrus.Infof("Translation successful: %d -> %d bytes",
+		len(contentText), len(translatedText))
+
+	// Формируем название файла в зависимости от направления перевода
+	var translatedTitle string
+	if fromLang == "ru" && toLang == "en" {
+		translatedTitle = "translated_en_" + file.Title
+	} else if fromLang == "en" && toLang == "ru" {
+		translatedTitle = "translated_ru_" + file.Title
+	} else {
+		translatedTitle = "translated_" + file.Title
+	}
 
 	// Сохраняем переведенный файл
 	translatedFile := models.File{
-		Title:       "translated_" + file.Title,
+		Title:       translatedTitle,
 		Path:        "db",
 		Status:      "translated",
 		UserID:      userId,
@@ -205,13 +225,15 @@ func (h *Handler) createTranslation(c *gin.Context) {
 
 	h.services.File.UpdateStatus(id, "completed")
 
-	logrus.Infof("Translation completed, new file ID: %d, content length: %d",
-		translatedId, len(translatedText))
+	logrus.Infof("Translation completed: %s->%s, new file ID: %d",
+		fromLang, toLang, translatedId)
 
 	c.JSON(http.StatusOK, map[string]interface{}{
-		"message":            "translation completed",
+		"message":            fmt.Sprintf("translation completed (%s->%s)", fromLang, toLang),
 		"original_file_id":   id,
 		"translated_file_id": translatedId,
+		"from_lang":          fromLang,
+		"to_lang":            toLang,
 	})
 }
 
@@ -241,4 +263,78 @@ func (h *Handler) deleteFile(c *gin.Context) {
 	logrus.Infof("File deleted: id=%d", id)
 
 	c.JSON(http.StatusOK, map[string]interface{}{"status": "deleted"})
+}
+
+// detectLanguage определяет язык текста и направление перевода
+func detectLanguage(text string) (string, string) {
+	if text == "" {
+		return "ru", "en" // По умолчанию
+	}
+
+	var russianChars, englishChars int
+	var totalChars int
+
+	for _, char := range text {
+		if unicode.IsLetter(char) {
+			totalChars++
+			// Русские буквы (кириллица)
+			if (char >= 'а' && char <= 'я') || (char >= 'А' && char <= 'Я') || char == 'ё' || char == 'Ё' {
+				russianChars++
+			}
+			// Английские буквы (латиница)
+			if (char >= 'a' && char <= 'z') || (char >= 'A' && char <= 'Z') {
+				englishChars++
+			}
+		}
+	}
+
+	// Если нет букв
+	if totalChars == 0 {
+		return "ru", "en"
+	}
+
+	// Вычисляем проценты
+	russianPercent := float64(russianChars) * 100 / float64(totalChars)
+	englishPercent := float64(englishChars) * 100 / float64(totalChars)
+
+	logrus.Debugf("Language detection: Russian %.1f%%, English %.1f%%",
+		russianPercent, englishPercent)
+
+	// Определяем язык
+	if russianPercent > 50 {
+		return "ru", "en" // Русский → Английский
+	} else if englishPercent > 50 {
+		return "en", "ru" // Английский → Русский
+	} else {
+		// Если смешанный текст или другой язык
+		// Пробуем найти ключевые слова
+		textLower := strings.ToLower(text)
+
+		russianKeywords := []string{"привет", "мир", "спасибо", "пожалуйста", "да", "нет"}
+		englishKeywords := []string{"hello", "world", "thank", "please", "yes", "no"}
+
+		russianMatches := 0
+		englishMatches := 0
+
+		for _, keyword := range russianKeywords {
+			if strings.Contains(textLower, keyword) {
+				russianMatches++
+			}
+		}
+
+		for _, keyword := range englishKeywords {
+			if strings.Contains(textLower, keyword) {
+				englishMatches++
+			}
+		}
+
+		if russianMatches > englishMatches {
+			return "ru", "en"
+		} else if englishMatches > russianMatches {
+			return "en", "ru"
+		}
+	}
+
+	// По умолчанию
+	return "ru", "en"
 }
