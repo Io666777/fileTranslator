@@ -1,11 +1,11 @@
 package service
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -27,99 +27,184 @@ func (s *TranslationService) TranslateText(text, fromLang, toLang string) (strin
 
 	logrus.Infof("Translating %d chars from %s to %s", len(text), fromLang, toLang)
 
-	// Очищаем текст
-	text = strings.TrimSpace(text)
-	if text == "" {
-		return "", nil
+	// Если текст длиннее 450 символов, разбиваем на части
+	if len(text) > 450 {
+		return s.translateLongText(text, fromLang, toLang)
 	}
 
-	// Формируем запрос для LibreTranslate
-	request := struct {
-		Q      string `json:"q"`
-		Source string `json:"source"`
-		Target string `json:"target"`
-		Format string `json:"format"`
-	}{
-		Q:      text,
-		Source: fromLang,
-		Target: toLang,
-		Format: "text",
-	}
+	return s.translateShortText(text, fromLang, toLang)
+}
 
-	jsonData, err := json.Marshal(request)
-	if err != nil {
-		return "", fmt.Errorf("marshal error: %w", err)
-	}
+// Перевод короткого текста (до 500 символов)
+func (s *TranslationService) translateShortText(text, fromLang, toLang string) (string, error) {
+	encodedText := url.QueryEscape(text)
+	apiURL := fmt.Sprintf("%s/get?q=%s&langpair=%s|%s",
+		s.apiURL, encodedText, fromLang, toLang)
 
-	// URL для LibreTranslate
-	url := strings.TrimSuffix(s.apiURL, "/") + "/translate"
+	logrus.Debugf("Calling MyMemory API for %d chars", len(text))
 
-	// Логируем что отправляем
-	if len(text) < 100 {
-		logrus.Debugf("Sending to translate: '%s'", text)
-	} else {
-		logrus.Debugf("Sending to translate: '%s...' (%d chars total)", text[:100], len(text))
-	}
-
-	// Создаем запрос
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
-	if err != nil {
-		return "", fmt.Errorf("request error: %w", err)
-	}
-
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Accept", "application/json")
-
-	client := &http.Client{
-		Timeout: 30 * time.Second,
-	}
-
-	// Отправляем запрос
-	resp, err := client.Do(req)
+	client := &http.Client{Timeout: 30 * time.Second}
+	resp, err := client.Get(apiURL)
 	if err != nil {
 		return "", fmt.Errorf("connection error: %w", err)
 	}
 	defer resp.Body.Close()
 
-	// Читаем ответ
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", fmt.Errorf("read error: %w", err)
 	}
 
-	// Логируем сырой ответ
-	logrus.Debugf("Translation response status: %d", resp.StatusCode)
-	logrus.Debugf("Translation response body: %s", string(body))
-
-	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("translation failed with status %d: %s", resp.StatusCode, string(body))
-	}
-
 	// Парсим ответ
-	var result map[string]interface{}
-	if err := json.Unmarshal(body, &result); err != nil {
-		return "", fmt.Errorf("parse error: %w, body: %s", err, string(body))
+	var data map[string]interface{}
+	if err := json.Unmarshal(body, &data); err != nil {
+		return "", fmt.Errorf("parse error: %w", err)
 	}
 
-	// Извлекаем переведенный текст
-	translatedText, ok := result["translatedText"].(string)
-	if !ok {
-		return "", fmt.Errorf("no translatedText in response: %v", result)
+	// Проверяем ошибки
+	if details, ok := data["responseDetails"].(string); ok && details != "" {
+		return "", fmt.Errorf("API error: %s", details)
 	}
 
-	if translatedText == "" {
-		return "", fmt.Errorf("empty translation received")
+	// Получаем перевод
+	if responseData, ok := data["responseData"].(map[string]interface{}); ok {
+		if translated, ok := responseData["translatedText"].(string); ok && translated != "" {
+			logrus.Debugf("Translated %d -> %d chars", len(text), len(translated))
+			return translated, nil
+		}
 	}
 
-	logrus.Infof("Translation successful: %d -> %d chars", 
-		len(text), len(translatedText))
+	return "", fmt.Errorf("no translation found")
+}
+
+// Перевод длинного текста (разбиваем на части)
+func (s *TranslationService) translateLongText(text, fromLang, toLang string) (string, error) {
+	logrus.Infof("Splitting long text (%d chars) into chunks", len(text))
 	
-	// Логируем результат
-	if len(translatedText) < 100 {
-		logrus.Debugf("Translated: '%s'", translatedText)
-	} else {
-		logrus.Debugf("Translated: '%s...'", translatedText[:100])
+	// Разбиваем текст на предложения или части по ~400 символов
+	chunks := splitIntoChunks(text, 400)
+	
+	var translatedChunks []string
+	
+	for i, chunk := range chunks {
+		logrus.Debugf("Translating chunk %d/%d (%d chars)", i+1, len(chunks), len(chunk))
+		
+		translated, err := s.translateShortText(chunk, fromLang, toLang)
+		if err != nil {
+			logrus.Warnf("Failed to translate chunk %d: %v", i+1, err)
+			// Если не удалось перевести чанк, оставляем оригинал
+			translated = chunk
+		}
+		
+		translatedChunks = append(translatedChunks, translated)
+		
+		// Пауза между запросами чтобы не перегружать API
+		if i < len(chunks)-1 {
+			time.Sleep(100 * time.Millisecond)
+		}
 	}
+	
+	result := strings.Join(translatedChunks, " ")
+	logrus.Infof("Long translation completed: %d -> %d chars", 
+		len(text), len(result))
+	
+	return result, nil
+}
 
-	return translatedText, nil
+// Разбить текст на части по предложениям или по длине
+func splitIntoChunks(text string, maxLen int) []string {
+	var chunks []string
+	
+	// Сначала пробуем разбить по предложениям
+	sentences := splitSentences(text)
+	
+	var currentChunk strings.Builder
+	for _, sentence := range sentences {
+		// Если добавление нового предложения превысит лимит, сохраняем текущий чанк
+		if currentChunk.Len()+len(sentence)+1 > maxLen && currentChunk.Len() > 0 {
+			chunks = append(chunks, currentChunk.String())
+			currentChunk.Reset()
+		}
+		
+		if currentChunk.Len() > 0 {
+			currentChunk.WriteString(" ")
+		}
+		currentChunk.WriteString(sentence)
+	}
+	
+	// Добавляем последний чанк
+	if currentChunk.Len() > 0 {
+		chunks = append(chunks, currentChunk.String())
+	}
+	
+	// Если не удалось разбить по предложениям, разбиваем по словам
+	if len(chunks) == 0 || (len(chunks) == 1 && len(chunks[0]) > maxLen) {
+		chunks = splitByWords(text, maxLen)
+	}
+	
+	return chunks
+}
+
+// Разбить по предложениям (простая реализация)
+func splitSentences(text string) []string {
+	// Заменяем разные виды точек
+	text = strings.ReplaceAll(text, "。", ".")
+	text = strings.ReplaceAll(text, "！", "!")
+	text = strings.ReplaceAll(text, "？", "?")
+	
+	// Разбиваем по . ! ? и переносам строк
+	splitPatterns := []string{". ", "! ", "? ", ".\n", "!\n", "?\n", ".", "!", "?", "\n"}
+	
+	for _, pattern := range splitPatterns {
+		if strings.Contains(text, pattern) {
+			var sentences []string
+			parts := strings.Split(text, pattern)
+			
+			for i, part := range parts {
+				part = strings.TrimSpace(part)
+				if part == "" {
+					continue
+				}
+				
+				// Добавляем точку обратно, если это не последняя часть
+				if i < len(parts)-1 {
+					part += pattern[0:1] // Берем первый символ паттерна (. ! ?)
+				}
+				
+				sentences = append(sentences, part)
+			}
+			
+			if len(sentences) > 1 {
+				return sentences
+			}
+		}
+	}
+	
+	// Если не нашли разделителей, возвращаем весь текст
+	return []string{text}
+}
+
+// Разбить по словам
+func splitByWords(text string, maxLen int) []string {
+	var chunks []string
+	var current strings.Builder
+	
+	words := strings.Fields(text)
+	for _, word := range words {
+		if current.Len()+len(word)+1 > maxLen && current.Len() > 0 {
+			chunks = append(chunks, current.String())
+			current.Reset()
+		}
+		
+		if current.Len() > 0 {
+			current.WriteString(" ")
+		}
+		current.WriteString(word)
+	}
+	
+	if current.Len() > 0 {
+		chunks = append(chunks, current.String())
+	}
+	
+	return chunks
 }

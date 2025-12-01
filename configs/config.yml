@@ -8,4 +8,4 @@ db:
   sslmode: "disable"
 
 translation:
-  api_url: "http://localhost:5000"
+  api_url: "https://api.mymemory.translated.net"

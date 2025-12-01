@@ -130,6 +130,7 @@ func (h *Handler) downloadFile(c *gin.Context) {
 }
 
 // ЗАПРОС ПЕРЕВОДА
+// ЗАПРОС ПЕРЕВОДА
 func (h *Handler) createTranslation(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -169,10 +170,11 @@ func (h *Handler) createTranslation(c *gin.Context) {
 		logrus.Errorf("Failed to update status: %v", err)
 	}
 
-	// Переводим
+	// Переводим - ИЗМЕНИ ЭТУ СТРОКУ:
+	// Было: "auto", стало: "ru"
 	translatedText, err := h.services.Translation.TranslateText(
 		string(file.FileContent),
-		"auto",
+		"ru", // ← ИЗМЕНИЛ "auto" НА "ru"
 		"en",
 	)
 
