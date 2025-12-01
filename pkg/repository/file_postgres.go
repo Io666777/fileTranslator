@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/sirupsen/logrus"
 )
 
 type FilePostgres struct {
@@ -16,12 +17,22 @@ func NewFilePostgres(db *sqlx.DB) *FilePostgres {
 }
 
 func (r *FilePostgres) Create(userId int, file models.File) (int, error) {
-    var id int
-    query := `INSERT INTO files (user_id, title, path, status, file_content) 
+	var id int
+	query := `INSERT INTO files (user_id, title, path, status, file_content) 
               VALUES ($1, $2, $3, $4, $5) RETURNING id`
-    
-    err := r.db.QueryRow(query, userId, file.Title, file.Path, file.Status, file.FileContent).Scan(&id)
-    return id, err
+
+	logrus.Debugf("Creating file: user_id=%d, title=%s, content length=%d",
+		userId, file.Title, len(file.FileContent))
+
+	err := r.db.QueryRow(query, userId, file.Title, file.Path, file.Status, file.FileContent).Scan(&id)
+
+	if err != nil {
+		logrus.Errorf("Failed to create file in DB: %v", err)
+	} else {
+		logrus.Infof("File created in DB: id=%d", id)
+	}
+
+	return id, err
 }
 
 func (r *FilePostgres) GetAll(userId int) ([]models.File, error) {

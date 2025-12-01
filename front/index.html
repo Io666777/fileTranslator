@@ -1,207 +1,94 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>File Translator</title>
-    <style>
-        body { font-family: Arial; max-width: 600px; margin: 40px auto; padding: 20px; }
-        .container { margin-bottom: 20px; }
-        input, button, textarea { width: 100%; padding: 10px; margin: 5px 0; }
-        button { background: #007bff; color: white; border: none; cursor: pointer; }
-        button:hover { background: #0056b3; }
-        .file-item { border: 1px solid #ddd; padding: 10px; margin: 10px 0; }
-        .hidden { display: none; }
-    </style>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <h1>📁 File Translator</h1>
-
-    <!-- Аутентификация -->
-    <div id="auth-section">
-        <div class="container">
-            <h3>Вход / Регистрация</h3>
-            <input type="text" id="username" placeholder="Username">
-            <input type="password" id="password" placeholder="Password">
-            <button onclick="signUp()">Регистрация</button>
-            <button onclick="signIn()">Войти</button>
-        </div>
-    </div>
-
-    <!-- Основной функционал -->
-    <div id="main-section" class="hidden">
-        <button onclick="logout()">Выйти</button>
-        
-        <div class="container">
-            <h3>Загрузить файл</h3>
-            <input type="file" id="file-input">
-            <button onclick="uploadFile()">Загрузить</button>
-        </div>
-
-        <div class="container">
-            <h3>Мои файлы</h3>
-            <div id="files-list"></div>
-        </div>
-    </div>
-
-    <script>
-        let token = localStorage.getItem('token');
-        
-        if (token) {
-            showMainSection();
-        }
-
-        function showMainSection() {
-            document.getElementById('auth-section').classList.add('hidden');
-            document.getElementById('main-section').classList.remove('hidden');
-            loadFiles();
-        }
-
-        async function signUp() {
-            const user = {
-                username: document.getElementById('username').value,
-                password: document.getElementById('password').value,
-                name: document.getElementById('username').value
-            };
-
-            const response = await fetch('/auth/sign-up', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(user)
-            });
-
-            alert(response.ok ? 'Регистрация успешна!' : 'Ошибка регистрации');
-        }
-
-        async function signIn() {
-            const credentials = {
-                username: document.getElementById('username').value,
-                password: document.getElementById('password').value
-            };
-
-            const response = await fetch('/auth/sign-in', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(credentials)
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                token = data.token;
-                localStorage.setItem('token', token);
-                showMainSection();
-            } else {
-                alert('Ошибка входа');
-            }
-        }
-
-        async function uploadFile() {
-            const fileInput = document.getElementById('file-input');
-            const file = fileInput.files[0];
+    <div class="container">
+        <!-- Аутентификация -->
+        <div id="auth-section" class="section">
+            <div class="logo">
+                <i class="fas fa-language"></i>
+                <h1>File Translator</h1>
+            </div>
             
-            if (!file) {
-                alert('Выберите файл');
-                return;
-            }
+            <div class="auth-container">
+                <h3><i class="fas fa-user"></i> Вход / Регистрация</h3>
+                <div class="form-group">
+                    <input type="text" id="username" placeholder="Логин" class="form-input">
+                    <i class="fas fa-user input-icon"></i>
+                </div>
+                <div class="form-group">
+                    <input type="password" id="password" placeholder="Пароль" class="form-input">
+                    <i class="fas fa-lock input-icon"></i>
+                </div>
+                <div class="button-group">
+                    <button onclick="signIn()" class="btn btn-primary">
+                        <i class="fas fa-sign-in-alt"></i> Войти
+                    </button>
+                    <button onclick="signUp()" class="btn btn-secondary">
+                        <i class="fas fa-user-plus"></i> Регистрация
+                    </button>
+                </div>
+            </div>
+        </div>
 
-            const formData = new FormData();
-            formData.append('file', file);
+        <!-- Основной функционал -->
+        <div id="main-section" class="section hidden">
+            <div class="header">
+                <div class="logo">
+                    <i class="fas fa-language"></i>
+                    <h1>File Translator</h1>
+                </div>
+                <button onclick="logout()" class="btn btn-logout">
+                    <i class="fas fa-sign-out-alt"></i> Выйти
+                </button>
+            </div>
 
-            const response = await fetch('/api/files/upload', {
-                method: 'POST',
-                headers: { 'Authorization': 'Bearer ' + token },
-                body: formData
-            });
+            <!-- Загрузка файла -->
+            <div class="card">
+                <h3><i class="fas fa-upload"></i> Загрузить файл</h3>
+                <div class="upload-area" id="upload-area">
+                    <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                    <p>Перетащите файл сюда или нажмите для выбора</p>
+                    <input type="file" id="file-input" class="file-input">
+                    <div class="file-info" id="file-info"></div>
+                </div>
+                <button onclick="uploadFile()" class="btn btn-primary btn-upload">
+                    <i class="fas fa-upload"></i> Загрузить
+                </button>
+            </div>
 
-            if (response.ok) {
-                alert('Файл загружен!');
-                fileInput.value = '';
-                loadFiles();
-            } else {
-                alert('Ошибка загрузки');
-            }
-        }
+            <!-- Мои файлы -->
+            <div class="card">
+                <h3><i class="fas fa-folder"></i> Мои файлы</h3>
+                <div class="file-actions">
+                    <button onclick="loadFiles()" class="btn btn-refresh">
+                        <i class="fas fa-sync-alt"></i> Обновить
+                    </button>
+                </div>
+                <div id="files-list" class="files-list">
+                    <div class="loading" id="loading">
+                        <i class="fas fa-spinner fa-spin"></i> Загрузка...
+                    </div>
+                </div>
+            </div>
+        </div>
 
-        async function loadFiles() {
-            const response = await fetch('/api/files/', {
-                headers: { 'Authorization': 'Bearer ' + token }
-            });
+        <!-- Модальное окно для информации о файле -->
+        <div id="modal" class="modal hidden">
+            <div class="modal-content">
+                <span class="close" onclick="closeModal()">&times;</span>
+                <div id="modal-body"></div>
+            </div>
+        </div>
+    </div>
 
-            if (response.ok) {
-                const files = await response.json();
-                displayFiles(files);
-            }
-        }
+    <script src="/js/main.js"></script>
 
-        function displayFiles(files) {
-            const filesList = document.getElementById('files-list');
-            filesList.innerHTML = '';
-
-            files.forEach(file => {
-                const fileItem = document.createElement('div');
-                fileItem.className = 'file-item';
-                fileItem.innerHTML = `
-                    <strong>${file.title}</strong> (${file.status})
-                    <br>
-                    <button onclick="downloadFile(${file.id})">Скачать</button>
-                    <button onclick="translateFile(${file.id})">Перевести</button>
-                    <button onclick="deleteFile(${file.id})">Удалить</button>
-                `;
-                filesList.appendChild(fileItem);
-            });
-        }
-
-        async function translateFile(fileId) {
-            const response = await fetch(`/api/files/${fileId}/translate`, {
-                method: 'POST',
-                headers: { 'Authorization': 'Bearer ' + token }
-            });
-
-            if (response.ok) {
-                alert('Перевод запущен!');
-                loadFiles();
-            } else {
-                alert('Ошибка перевода');
-            }
-        }
-
-        async function downloadFile(fileId) {
-            const response = await fetch(`/api/files/${fileId}/download`, {
-                headers: { 'Authorization': 'Bearer ' + token }
-            });
-
-            if (response.ok) {
-                const blob = await response.blob();
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `file_${fileId}`;
-                a.click();
-            } else {
-                alert('Ошибка скачивания');
-            }
-        }
-
-        async function deleteFile(fileId) {
-            if (!confirm('Удалить файл?')) return;
-
-            const response = await fetch(`/api/files/${fileId}`, {
-                method: 'DELETE',
-                headers: { 'Authorization': 'Bearer ' + token }
-            });
-
-            if (response.ok) {
-                alert('Файл удален');
-                loadFiles();
-            } else {
-                alert('Ошибка удаления');
-            }
-        }
-
-        function logout() {
-            localStorage.removeItem('token');
-            token = null;
-            document.getElementById('auth-section').classList.remove('hidden');
-            document.getElementById('main-section').classList.add('hidden');
-        }
-    </script>
 </body>
 </html>

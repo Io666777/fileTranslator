@@ -17,14 +17,20 @@ func NewHandler(services *service.Service) *Handler {
 func (h *Handler) InitRoutes() *gin.Engine {
 	router := gin.New()
 
-	router.Static("/front", "./front")
+	// Отдаем статические файлы из папки front
+	router.Static("/css", "./front/css")
+	router.Static("/js", "./front/js")
+	router.Static("/assets", "./front/assets")
+
+	// Главная страница - только один обработчик!
 	router.GET("/", func(c *gin.Context) {
 		c.File("./front/index.html")
 	})
 
+	// API маршруты
 	auth := router.Group("/auth")
 	{
-		auth.POST("/sign-up", h.signUp) // исправлено на kebab-case
+		auth.POST("/sign-up", h.signUp)
 		auth.POST("/sign-in", h.signIn)
 	}
 
@@ -32,11 +38,11 @@ func (h *Handler) InitRoutes() *gin.Engine {
 	{
 		files := api.Group("/files")
 		{
-			files.POST("/upload", h.uploadFile)               // ЗАГРУЗКА
-			files.GET("/", h.getAllFiles)                     // СПИСОК
-			files.GET("/:id/download", h.downloadFile)        // СКАЧИВАНИЕ
-			files.POST("/:id/translate", h.createTranslation) // ПЕРЕВОД
-			files.DELETE("/:id", h.deleteFile)                // УДАЛЕНИЕ
+			files.POST("/upload", h.uploadFile)
+			files.GET("/", h.getAllFiles)
+			files.GET("/:id/download", h.downloadFile)
+			files.POST("/:id/translate", h.createTranslation)
+			files.DELETE("/:id", h.deleteFile)
 		}
 	}
 
