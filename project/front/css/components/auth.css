@@ -1,0 +1,51 @@
+/* components/auth.css */
+/* Формы аутентификации */
+.auth-container {
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.auth-container h3 {
+    color: var(--text-secondary);
+    margin-bottom: 25px;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.form-group {
+    position: relative;
+    margin-bottom: 25px;
+}
+
+.form-input {
+    width: 100%;
+    padding: 15px 15px 15px 45px;
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-md);
+    font-size: 16px;
+    transition: var(--transition);
+    background: var(--bg-light);
+    color: var(--text-primary);
+}
+
+.form-input:focus {
+    border-color: var(--primary-color);
+    outline: none;
+    background: var(--bg-white);
+    box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+}
+
+.form-input::placeholder {
+    color: var(--text-light);
+}
+
+.input-icon {
+    position: absolute;
+    left: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-light);
+    font-size: 16px;
+}

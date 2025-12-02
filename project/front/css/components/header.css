@@ -1,0 +1,50 @@
+/* components/header.css */
+/* Хедер */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    flex-wrap: nowrap;
+    gap: 20px;
+}
+
+.header .logo {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 0;
+    flex-shrink: 0;
+}
+
+.header .logo i {
+    font-size: 32px;
+    color: var(--primary-color);
+    margin-bottom: 0;
+}
+
+.header .logo h1 {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+    white-space: nowrap;
+}
+
+/* Логотип для auth секции */
+#auth-section .logo {
+    text-align: center;
+    margin-bottom: 40px;
+    color: var(--primary-color);
+}
+
+#auth-section .logo i {
+    font-size: 48px;
+    margin-bottom: 15px;
+}
+
+#auth-section .logo h1 {
+    font-size: 32px;
+    font-weight: 600;
+    color: var(--primary-color);
+}
