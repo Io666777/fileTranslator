@@ -11,7 +11,7 @@ type File struct {
 	ID          int    `json:"id" db:"id"`
 	Title       string `json:"title" binding:"required"`
 	Path        string `json:"path" db:"path"`
-	Status      string `json:"status" db:"status"` // uploaded, processing, translated
+	Status      string `json:"status" db:"status"` 
 	UserID      int    `json:"user_id" db:"user_id"`
 	CreatedAt   string `json:"created_at" db:"created_at"`
 	FileContent []byte `json:"-" db:"file_content"`

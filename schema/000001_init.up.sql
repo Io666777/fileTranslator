@@ -14,9 +14,8 @@ CREATE TABLE files
     title VARCHAR(255) NOT NULL,
     path VARCHAR(500) NOT NULL,
     status VARCHAR(50) DEFAULT 'uploaded',
-    file_content BYTEA, -- ДОБАВИЛИ ЭТУ СТРОКУ
+    file_content BYTEA,  
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-
--- Индекс для быстрого поиска файлов пользователя
+ 
 CREATE INDEX idx_files_user_id ON files(user_id);

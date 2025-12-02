@@ -14,12 +14,12 @@ import (
 const (
 	salt       = "dadadadada"
 	tokenTTL   = 12 * time.Hour
-	signingKey = "dadadda" // исправлено: singingKey -> signingKey
+	signingKey = "dadadda" 
 )
 
 type tokenClaims struct {
 	jwt.RegisteredClaims
-	UserID int `json:"user_id"` // исправлено: UserId -> UserID
+	UserID int `json:"user_id"` 
 }
 
 type AuthService struct {

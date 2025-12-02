@@ -27,7 +27,6 @@ func (s *TranslationService) TranslateText(text, fromLang, toLang string) (strin
 
 	logrus.Infof("Translating %d chars from %s to %s", len(text), fromLang, toLang)
 
-	// Если текст длиннее 450 символов, разбиваем на части
 	if len(text) > 450 {
 		return s.translateLongText(text, fromLang, toLang)
 	}
@@ -35,7 +34,6 @@ func (s *TranslationService) TranslateText(text, fromLang, toLang string) (strin
 	return s.translateShortText(text, fromLang, toLang)
 }
 
-// Перевод короткого текста (до 500 символов)
 func (s *TranslationService) translateShortText(text, fromLang, toLang string) (string, error) {
 	encodedText := url.QueryEscape(text)
 	apiURL := fmt.Sprintf("%s/get?q=%s&langpair=%s|%s",
@@ -55,18 +53,15 @@ func (s *TranslationService) translateShortText(text, fromLang, toLang string) (
 		return "", fmt.Errorf("read error: %w", err)
 	}
 
-	// Парсим ответ
 	var data map[string]interface{}
 	if err := json.Unmarshal(body, &data); err != nil {
 		return "", fmt.Errorf("parse error: %w", err)
 	}
 
-	// Проверяем ошибки
 	if details, ok := data["responseDetails"].(string); ok && details != "" {
 		return "", fmt.Errorf("API error: %s", details)
 	}
 
-	// Получаем перевод
 	if responseData, ok := data["responseData"].(map[string]interface{}); ok {
 		if translated, ok := responseData["translatedText"].(string); ok && translated != "" {
 			logrus.Debugf("Translated %d -> %d chars", len(text), len(translated))
@@ -77,11 +72,9 @@ func (s *TranslationService) translateShortText(text, fromLang, toLang string) (
 	return "", fmt.Errorf("no translation found")
 }
 
-// Перевод длинного текста (разбиваем на части)
 func (s *TranslationService) translateLongText(text, fromLang, toLang string) (string, error) {
 	logrus.Infof("Splitting long text (%d chars) into chunks", len(text))
 
-	// Разбиваем текст на предложения или части по ~400 символов
 	chunks := splitIntoChunks(text, 400)
 
 	var translatedChunks []string
@@ -92,13 +85,12 @@ func (s *TranslationService) translateLongText(text, fromLang, toLang string) (s
 		translated, err := s.translateShortText(chunk, fromLang, toLang)
 		if err != nil {
 			logrus.Warnf("Failed to translate chunk %d: %v", i+1, err)
-			// Если не удалось перевести чанк, оставляем оригинал
+
 			translated = chunk
 		}
 
 		translatedChunks = append(translatedChunks, translated)
 
-		// Пауза между запросами чтобы не перегружать API
 		if i < len(chunks)-1 {
 			time.Sleep(100 * time.Millisecond)
 		}
@@ -111,16 +103,14 @@ func (s *TranslationService) translateLongText(text, fromLang, toLang string) (s
 	return result, nil
 }
 
-// Разбить текст на части по предложениям или по длине
 func splitIntoChunks(text string, maxLen int) []string {
 	var chunks []string
 
-	// Сначала пробуем разбить по предложениям
 	sentences := splitSentences(text)
 
 	var currentChunk strings.Builder
 	for _, sentence := range sentences {
-		// Если добавление нового предложения превысит лимит, сохраняем текущий чанк
+
 		if currentChunk.Len()+len(sentence)+1 > maxLen && currentChunk.Len() > 0 {
 			chunks = append(chunks, currentChunk.String())
 			currentChunk.Reset()
@@ -132,12 +122,10 @@ func splitIntoChunks(text string, maxLen int) []string {
 		currentChunk.WriteString(sentence)
 	}
 
-	// Добавляем последний чанк
 	if currentChunk.Len() > 0 {
 		chunks = append(chunks, currentChunk.String())
 	}
 
-	// Если не удалось разбить по предложениям, разбиваем по словам
 	if len(chunks) == 0 || (len(chunks) == 1 && len(chunks[0]) > maxLen) {
 		chunks = splitByWords(text, maxLen)
 	}
@@ -145,14 +133,12 @@ func splitIntoChunks(text string, maxLen int) []string {
 	return chunks
 }
 
-// Разбить по предложениям (простая реализация)
 func splitSentences(text string) []string {
 	// Заменяем разные виды точек
 	text = strings.ReplaceAll(text, "。", ".")
 	text = strings.ReplaceAll(text, "！", "!")
 	text = strings.ReplaceAll(text, "？", "?")
 
-	// Разбиваем по . ! ? и переносам строк
 	splitPatterns := []string{". ", "! ", "? ", ".\n", "!\n", "?\n", ".", "!", "?", "\n"}
 
 	for _, pattern := range splitPatterns {
@@ -166,9 +152,8 @@ func splitSentences(text string) []string {
 					continue
 				}
 
-				// Добавляем точку обратно, если это не последняя часть
 				if i < len(parts)-1 {
-					part += pattern[0:1] // Берем первый символ паттерна (. ! ?)
+					part += pattern[0:1] 
 				}
 
 				sentences = append(sentences, part)
@@ -180,11 +165,9 @@ func splitSentences(text string) []string {
 		}
 	}
 
-	// Если не нашли разделителей, возвращаем весь текст
 	return []string{text}
 }
 
-// Разбить по словам
 func splitByWords(text string, maxLen int) []string {
 	var chunks []string
 	var current strings.Builder
@@ -208,7 +191,3 @@ func splitByWords(text string, maxLen int) []string {
 
 	return chunks
 }
-
-// pkg/handler/file.go
-
-// detectLanguage определяет язык текста

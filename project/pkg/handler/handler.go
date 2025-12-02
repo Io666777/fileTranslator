@@ -17,17 +17,14 @@ func NewHandler(services *service.Service) *Handler {
 func (h *Handler) InitRoutes() *gin.Engine {
 	router := gin.New()
 
-	// Отдаем статические файлы из папки front
 	router.Static("/css", "./front/css")
 	router.Static("/js", "./front/js")
 	router.Static("/assets", "./front/assets")
 
-	// Главная страница - только один обработчик!
 	router.GET("/", func(c *gin.Context) {
 		c.File("./front/index.html")
 	})
 
-	// API маршруты
 	auth := router.Group("/auth")
 	{
 		auth.POST("/sign-up", h.signUp)

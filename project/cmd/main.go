@@ -33,7 +33,6 @@ func main() {
 
 	repos := repository.NewRepository(db)
 
-	// БЕРЕМ URL ИЗ КОНФИГА
 	translationService := service.NewTranslationService(
 		os.Getenv("API_URL"),
 	)
