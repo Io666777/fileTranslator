@@ -9,25 +9,21 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
-	"github.com/spf13/viper"
 )
 
 func main() {
 	logrus.SetFormatter(new(logrus.JSONFormatter))
-	if err := initConfig(); err != nil {
-		logrus.Fatalf("error initialization config: %s", err.Error())
-	}
 
 	if err := godotenv.Load(); err != nil {
 		logrus.Fatalf("error loading env variables: %s", err.Error())
 	}
 
 	db, err := repository.NewPostgresDB(repository.Config{
-		Host:     viper.GetString("db.host"),
-		Port:     viper.GetString("db.port"),
-		Username: viper.GetString("db.username"),
-		DBName:   viper.GetString("db.dbname"),
-		SSLMode:  viper.GetString("db.sslmode"),
+		Host:     os.Getenv("DB_HOST"),
+		Port:     os.Getenv("DB_PORT"),
+		Username: os.Getenv("DB_USERNAME"),
+		DBName:   os.Getenv("DB_NAME"),
+		SSLMode:  os.Getenv("DB_SSLMODE"),
 		Password: os.Getenv("DB_PASSWORD"),
 	})
 	if err != nil {
@@ -39,7 +35,7 @@ func main() {
 
 	// БЕРЕМ URL ИЗ КОНФИГА
 	translationService := service.NewTranslationService(
-		viper.GetString("translation.api_url"),
+		os.Getenv("API_URL"),
 	)
 
 	services := &service.Service{
@@ -51,19 +47,9 @@ func main() {
 	handlers := handler.NewHandler(services)
 
 	srv := new(internal.Server)
-	port := viper.GetString("port")
-	if port == "" {
-		port = "8080"
-	}
+	port := "8080"
 
 	if err := srv.Run(port, handlers.InitRoutes()); err != nil {
 		logrus.Fatalf("error occurred while running http server: %s", err.Error())
 	}
-}
-
-// ДОБАВИТЬ ЭТУ ФУНКЦИЮ
-func initConfig() error {
-	viper.AddConfigPath("configs")
-	viper.SetConfigName("config")
-	return viper.ReadInConfig()
 }
